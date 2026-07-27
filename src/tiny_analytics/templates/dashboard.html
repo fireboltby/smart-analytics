@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}tiny-analytics{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <nav>
+    <h1>📊 tiny-analytics</h1>
+    <div class="links">
+      <a href="/logs">logs</a>
+      <a href="/logout">log out</a>
+    </div>
+  </nav>
+
+  <div class="controls">
+    <div class="control-group">
+      <label>Period</label>
+      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6h</a>
+      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24h</a>
+      <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7d</a>
+      <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30d</a>
+    </div>
+    <div class="control-group">
+      <label>Interval</label>
+      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15m</a>
+      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1h</a>
+      <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1d</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <h3>Unique Visitors</h3>
+      <div class="num">{{ "{:,}".format(total_uniques) }}</div>
+    </div>
+    <div class="stat">
+      <h3>Page Views</h3>
+      <div class="num">{{ "{:,}".format(total_views) }}</div>
+    </div>
+    <div class="stat">
+      <h3>Avg. Time on Page</h3>
+      <div class="num">{{ duration_str }}</div>
+    </div>
+    <div class="stat">
+      <h3>Desktop</h3>
+      <div class="num">{{ "{:,}".format(device_counts.desktop) }}</div>
+    </div>
+    <div class="stat">
+      <h3>Mobile</h3>
+      <div class="num">{{ "{:,}".format(device_counts.mobile) }}</div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-card wide">
+      <h3>Traffic</h3>
+      <div id="traffic-chart" class="chart tall"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Countries</h3>
+      <div id="geo-chart" class="chart"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Devices</h3>
+      <div id="device-chart" class="chart"></div>
+    </div>
+  </div>
+
+  <div class="snippet">
+    <h3>Embed this on your site</h3>
+    <div class="snippet-box">
+      <div class="snippet-code" id="snippet-text">&lt;script src="{{ origin }}/snippet.js" defer&gt;&lt;/script&gt;</div>
+      <button class="copy-btn" onclick="copySnippet()">Copy</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+<script>
+  initCharts({{ chart_data | tojson }});
+</script>
+{% endblock %}

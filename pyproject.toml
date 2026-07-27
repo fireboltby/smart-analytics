@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tiny-analytics"
+version = "0.1.3"
+description = "Minimal, privacy-focused web analytics"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Zev Averbach", email = "zev@averba.ch" }
+]
+keywords = ["analytics", "privacy", "web", "self-hosted"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "python-multipart>=0.0.12",
+    "itsdangerous>=2.2.0",
+    "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+tiny-analytics = "tiny_analytics.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/zevaverbach/tiny-analytics"
+Repository = "https://github.com/zevaverbach/tiny-analytics"
+Issues = "https://github.com/zevaverbach/tiny-analytics/issues"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tiny_analytics"]
+artifacts = [
+    "src/tiny_analytics/static/**/*",
+    "src/tiny_analytics/templates/**/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
