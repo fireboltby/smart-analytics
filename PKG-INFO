@@ -135,7 +135,7 @@ No cookies. No localStorage. No tracking across sites.
 | `TINY_ANALYTICS_PASSWORD` | `changeme` | Dashboard login password |
 | `TINY_ANALYTICS_SECRET_KEY` | `change-this...` | Session signing key (generate a random string) |
 | `TINY_ANALYTICS_ALLOWED_ORIGINS` | `[]` | Restrict tracking to specific domains (empty = allow all) |
-| `TINY_ANALYTICS_DB_PATH` | `./tiny_analytics.db` | SQLite database location |
+| `TINY_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite database location |
 | `TINY_ANALYTICS_HOST` | `0.0.0.0` | Host to bind to |
 | `TINY_ANALYTICS_PORT` | `8000` | Port to listen on |
 

@@ -107,7 +107,7 @@ smart-analytics
 | `TINY_ANALYTICS_PASSWORD` | `changeme` | 仪表盘登录密码 |
 | `TINY_ANALYTICS_SECRET_KEY` | `change-this...` | 会话签名密钥（请生成随机字符串） |
 | `TINY_ANALYTICS_ALLOWED_ORIGINS` | `[]` | 限制可上报的域名（空 = 允许所有） |
-| `TINY_ANALYTICS_DB_PATH` | `./tiny_analytics.db` | SQLite 数据库位置 |
+| `TINY_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite 数据库位置 |
 | `TINY_ANALYTICS_HOST` | `0.0.0.0` | 绑定的主机 |
 | `TINY_ANALYTICS_PORT` | `8000` | 监听端口 |
 
