@@ -4,6 +4,9 @@ import re
 import sqlite3
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+
+# 全系统统一时区：北京时间 (UTC+8)。采集写入、查询窗口、展示均以此为基准。
+BEIJING = timezone(timedelta(hours=8))
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlparse, parse_qs
@@ -229,13 +232,13 @@ async def track(hit: Hit, request: Request):
     device = detect_device(ua)
 
     # Use provided session ID or generate one
-    sid = hit.sid or hashlib.sha256(f"{visitor_hash}:{datetime.now(timezone.utc).isoformat()}".encode()).hexdigest()[:12]
+    sid = hit.sid or hashlib.sha256(f"{visitor_hash}:{datetime.now(BEIJING).isoformat()}".encode()).hexdigest()[:12]
 
     conn = get_db()
     conn.execute(
         """INSERT INTO pageviews (ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec)
            VALUES (?, ?, ?, ?, ?, ?, ?, NULL)""",
-        (datetime.now(timezone.utc).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, device),
+        (datetime.now(BEIJING).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, device),
     )
     # Get the row ID for duration updates
     row_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
@@ -502,7 +505,7 @@ async def dashboard(request: Request, hours: int = 24, interval: str = "1h"):
         interval = "1h"
 
     conn = get_db()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(BEIJING)
     since = (now - timedelta(hours=hours)).isoformat()
 
     # Aggregate stats
@@ -806,7 +809,7 @@ async def dashboard(request: Request, hours: int = 24, interval: str = "1h"):
 
 @app.get("/api/realtime", dependencies=[Depends(require_auth)])
 async def api_realtime():
-    since = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    since = (datetime.now(BEIJING) - timedelta(minutes=5)).isoformat()
     conn = get_db()
     online = conn.execute(
         "SELECT COUNT(DISTINCT visitor_hash) FROM pageviews WHERE ts >= ?", (since,)
