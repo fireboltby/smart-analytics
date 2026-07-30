@@ -1,4 +1,4 @@
-# tiny-analytics
+# smart-analytics
 
 Minimal, privacy-focused web analytics. Self-hosted, no cookies, no tracking IDs.
 
@@ -8,14 +8,14 @@ Minimal, privacy-focused web analytics. Self-hosted, no cookies, no tracking IDs
 
 ```bash
 # Install
-uv tool install tiny-analytics
+uv tool install smart-analytics
 
 # Configure (create a .env file or set environment variables)
 export TINY_ANALYTICS_PASSWORD="your-secret-password"
 export TINY_ANALYTICS_SECRET_KEY="$(openssl rand -hex 32)"
 
 # Run
-tiny-analytics
+smart-analytics
 ```
 
 Add this to your site:
@@ -28,33 +28,33 @@ That's it. View your dashboard at `http://localhost:8000/`.
 ### One-liner (no install)
 
 ```bash
-uvx tiny-analytics
+uvx smart-analytics
 ```
 
 ### From source
 
 ```bash
-git clone https://github.com/zevaverbach/tiny-analytics.git
-cd tiny-analytics
+git clone https://github.com/fireboltby/smart-analytics.git
+cd smart-analytics
 uv sync
-uv run tiny-analytics
+uv run smart-analytics
 ```
 
 <details>
 <summary>Using pip instead of uv</summary>
 
 ```bash
-pip install tiny-analytics
-tiny-analytics
+pip install smart-analytics
+smart-analytics
 ```
 
 Or from source:
 ```bash
-git clone https://github.com/zevaverbach/tiny-analytics.git
-cd tiny-analytics
+git clone https://github.com/fireboltby/smart-analytics.git
+cd smart-analytics
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-tiny-analytics
+smart-analytics
 ```
 </details>
 
@@ -109,15 +109,15 @@ No cookies. No localStorage. No tracking across sites.
 
 ```ini
 [Unit]
-Description=tiny-analytics
+Description=smart-analytics
 After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/opt/tiny-analytics
+WorkingDirectory=/opt/smart-analytics
 Environment="TINY_ANALYTICS_PASSWORD=your-password"
 Environment="TINY_ANALYTICS_SECRET_KEY=your-secret-key"
-ExecStart=/usr/local/bin/tiny-analytics
+ExecStart=/usr/local/bin/smart-analytics
 Restart=always
 
 [Install]
@@ -137,12 +137,12 @@ location / {
 
 ### Cloudflare
 
-tiny-analytics reads `cf-connecting-ip` and `cf-ipcountry` headers automatically for accurate geo and IP data behind Cloudflare.
+smart-analytics reads `cf-connecting-ip` and `cf-ipcountry` headers automatically for accurate geo and IP data behind Cloudflare.
 
 ## CLI Options
 
 ```
-tiny-analytics [OPTIONS]
+smart-analytics [OPTIONS]
 
 Options:
   --host TEXT     Host to bind to [default: 0.0.0.0]

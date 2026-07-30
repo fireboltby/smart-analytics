@@ -1,17 +1,17 @@
-"""CLI for tiny-analytics."""
+"""CLI for smart-analytics."""
 
 import os
 import secrets
 
 
 def main():
-    """Run the tiny-analytics server."""
+    """Run the smart-analytics server."""
     import argparse
 
     import uvicorn
 
     parser = argparse.ArgumentParser(
-        description="tiny-analytics - Minimal, privacy-focused web analytics"
+        description="smart-analytics - Minimal, privacy-focused web analytics"
     )
     parser.add_argument(
         "--host",
@@ -38,20 +38,20 @@ def main():
     if not os.environ.get("TINY_ANALYTICS_SECRET_KEY"):
         os.environ["TINY_ANALYTICS_SECRET_KEY"] = secrets.token_hex(32)
 
-    # Startup banner
+    # Startup banner（中文）
     print("\n  ╭─────────────────────────────────────────╮")
-    print("  │           tiny-analytics                │")
+    print("  │           smart-analytics                │")
     print("  ╰─────────────────────────────────────────╯")
     print()
-    print(f"  Dashboard:  http://{args.host}:{args.port}/")
-    print(f"  Password:   {password}", end="")
+    print(f"  仪表盘地址：  http://{args.host}:{args.port}/")
+    print(f"  登录密码：    {password}", end="")
     if generated:
-        print("  (generated)")
+        print("  （已自动生成）")
     else:
         print()
     print()
     if generated:
-        print("  Set TINY_ANALYTICS_PASSWORD to use your own.")
+        print("  设置环境变量 TINY_ANALYTICS_PASSWORD 即可自定义密码。")
         print()
     
     import sys

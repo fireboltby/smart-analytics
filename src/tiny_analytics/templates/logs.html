@@ -1,35 +1,35 @@
 {% extends "base.html" %}
 
-{% block title %}tiny-analytics - logs{% endblock %}
+{% block title %}smart-analytics - 访问日志{% endblock %}
 
 {% block body %}
 <div class="container wide">
   <nav>
-    <h1>📊 tiny-analytics / logs</h1>
+    <h1>📊 smart-analytics / 访问日志</h1>
     <div class="links">
-      <a href="/">dashboard</a>
-      <a href="/logout">log out</a>
+      <a href="/">仪表盘</a>
+      <a href="/logout">退出登录</a>
     </div>
   </nav>
 
   <div class="filters">
-    <a href="/logs?filter=all" {% if filter == "all" %}class="active"{% endif %}>all</a>
-    <a href="/logs?filter=humans" {% if filter == "humans" %}class="active"{% endif %}>humans</a>
-    <a href="/logs?filter=bots" {% if filter == "bots" %}class="active"{% endif %}>bots</a>
+    <a href="/logs?filter=all" {% if filter == "all" %}class="active"{% endif %}>全部</a>
+    <a href="/logs?filter=humans" {% if filter == "humans" %}class="active"{% endif %}>真人</a>
+    <a href="/logs?filter=bots" {% if filter == "bots" %}class="active"{% endif %}>机器人</a>
   </div>
 
-  <p class="meta">Showing {{ offset + 1 }}–{{ [offset + limit, total] | min }} of {{ "{:,}".format(total) }} total hits</p>
+  <p class="meta">共 {{ "{:,}".format(total) }} 条访问记录，当前显示第 {{ offset + 1 }}–{{ [offset + limit, total] | min }} 条</p>
 
   <table>
     <thead>
       <tr>
-        <th>Timestamp</th>
-        <th>URL</th>
-        <th>Referrer</th>
-        <th>Country</th>
-        <th>Device</th>
-        <th>Duration</th>
-        <th>Type</th>
+        <th>时间</th>
+        <th>页面</th>
+        <th>来源</th>
+        <th>国家/地区</th>
+        <th>设备</th>
+        <th>停留时长</th>
+        <th>类型</th>
       </tr>
     </thead>
     <tbody>
@@ -44,25 +44,25 @@
           <td>{{ row.duration }}</td>
           <td>
             {% if row.is_bot %}
-            <span class="badge bot">bot</span>
+            <span class="badge bot">机器人</span>
             {% else %}
-            <span class="badge human">human</span>
+            <span class="badge human">真人</span>
             {% endif %}
           </td>
         </tr>
         {% endfor %}
       {% else %}
-        <tr><td colspan="7">No hits found</td></tr>
+        <tr><td colspan="7">暂无访问记录</td></tr>
       {% endif %}
     </tbody>
   </table>
 
   <div class="pagination">
     {% if offset > 0 %}
-    <a href="/logs?offset={{ prev_offset }}&filter={{ filter }}">← Previous</a>
+    <a href="/logs?offset={{ prev_offset }}&filter={{ filter }}">← 上一页</a>
     {% endif %}
     {% if offset + limit < total %}
-    <a href="/logs?offset={{ next_offset }}&filter={{ filter }}">Next →</a>
+    <a href="/logs?offset={{ next_offset }}&filter={{ filter }}">下一页 →</a>
     {% endif %}
   </div>
 </div>

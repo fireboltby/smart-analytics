@@ -282,6 +282,11 @@ tr:hover td {
   color: #fff;
 }
 
+.badge.est {
+  background: rgba(210, 153, 34, 0.15);
+  color: var(--orange);
+}
+
 /* Filters */
 .filters {
   margin-bottom: 1rem;
@@ -375,4 +380,116 @@ tr:hover td {
 
 .login-container button:hover {
   opacity: 0.9;
+}
+
+/* Period-over-period delta badge */
+.stat .num {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.delta {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+}
+
+.delta.up {
+  color: var(--green);
+  background: rgba(63, 185, 80, 0.12);
+}
+
+.delta.down {
+  color: var(--red);
+  background: rgba(248, 81, 73, 0.12);
+}
+
+/* Insights grid (tables + rank lists) */
+.insights {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .insights {
+    grid-template-columns: 1fr;
+  }
+}
+
+.insight-card {
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  padding: 1rem;
+}
+
+.insight-card h3 {
+  margin: 0 0 0.8rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.insight-card h3.sub {
+  margin-top: 1.2rem;
+}
+
+.data-table {
+  font-size: 0.8rem;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.5rem 0.6rem;
+}
+
+.url-cell {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rank-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.2rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.rank-list li:last-child {
+  border-bottom: none;
+}
+
+.rank-name {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.rank-val {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.4rem 0;
 }

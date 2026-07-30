@@ -1,4 +1,4 @@
-"""CLI entry point for tiny-analytics."""
+"""CLI entry point for smart-analytics."""
 
 from tiny_analytics.cli import main
 

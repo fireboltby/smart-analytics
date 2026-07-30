@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}tiny-analytics{% endblock %}
+{% block title %}仪表盘 · smart-analytics{% endblock %}
 
 {% block head %}
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -9,72 +9,226 @@
 {% block body %}
 <div class="container">
   <nav>
-    <h1>📊 tiny-analytics</h1>
+    <h1>📊 smart-analytics</h1>
     <div class="links">
-      <a href="/logs">logs</a>
-      <a href="/logout">log out</a>
+      <a href="/logs">访问日志</a>
+      <a href="/logout">退出登录</a>
     </div>
   </nav>
 
   <div class="controls">
     <div class="control-group">
-      <label>Period</label>
-      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6h</a>
-      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24h</a>
-      <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7d</a>
-      <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30d</a>
+      <label>时间范围</label>
+      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6小时</a>
+      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24小时</a>
+      <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
+      <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30天</a>
     </div>
     <div class="control-group">
-      <label>Interval</label>
-      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15m</a>
-      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1h</a>
-      <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1d</a>
+      <label>统计间隔</label>
+      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分钟</a>
+      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1小时</a>
+      <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1天</a>
     </div>
   </div>
 
   <div class="stats">
     <div class="stat">
-      <h3>Unique Visitors</h3>
-      <div class="num">{{ "{:,}".format(total_uniques) }}</div>
+      <h3>独立访客</h3>
+      <div class="num">{{ "{:,}".format(total_uniques) }}
+        {% if deltas.uniques is not none %}<span class="delta {{ 'up' if deltas.uniques >= 0 else 'down' }}">{{ '▲' if deltas.uniques >= 0 else '▼' }}{{ deltas.uniques }}%</span>{% endif %}
+      </div>
     </div>
     <div class="stat">
-      <h3>Page Views</h3>
-      <div class="num">{{ "{:,}".format(total_views) }}</div>
+      <h3>页面浏览量</h3>
+      <div class="num">{{ "{:,}".format(total_views) }}
+        {% if deltas.views is not none %}<span class="delta {{ 'up' if deltas.views >= 0 else 'down' }}">{{ '▲' if deltas.views >= 0 else '▼' }}{{ deltas.views }}%</span>{% endif %}
+      </div>
     </div>
     <div class="stat">
-      <h3>Avg. Time on Page</h3>
-      <div class="num">{{ duration_str }}</div>
+      <h3>平均停留时长</h3>
+      <div class="num">{{ duration_str }}
+        {% if deltas.duration is not none %}<span class="delta {{ 'up' if deltas.duration >= 0 else 'down' }}">{{ '▲' if deltas.duration >= 0 else '▼' }}{{ deltas.duration }}%</span>{% endif %}
+      </div>
     </div>
     <div class="stat">
-      <h3>Desktop</h3>
+      <h3>桌面端</h3>
       <div class="num">{{ "{:,}".format(device_counts.desktop) }}</div>
     </div>
     <div class="stat">
-      <h3>Mobile</h3>
+      <h3>移动端</h3>
       <div class="num">{{ "{:,}".format(device_counts.mobile) }}</div>
+    </div>
+    <div class="stat">
+      <h3>实时在线</h3>
+      <div class="num" id="realtime-count">{{ "{:,}".format(online_now) }}</div>
+    </div>
+    <div class="stat">
+      <h3>跳出率 <span class="badge est">估算</span></h3>
+      <div class="num">{{ bounce_rate }}</div>
+    </div>
+    <div class="stat">
+      <h3>平均会话时长 <span class="badge est">估算</span></h3>
+      <div class="num">{{ avg_session_str }}</div>
     </div>
   </div>
 
   <div class="charts">
     <div class="chart-card wide">
-      <h3>Traffic</h3>
+      <h3>访问趋势</h3>
       <div id="traffic-chart" class="chart tall"></div>
     </div>
     <div class="chart-card">
-      <h3>Countries</h3>
+      <h3>国家/地区</h3>
       <div id="geo-chart" class="chart"></div>
     </div>
     <div class="chart-card">
-      <h3>Devices</h3>
+      <h3>设备分布</h3>
       <div id="device-chart" class="chart"></div>
+    </div>
+    <div class="chart-card">
+      <h3>新/老访客</h3>
+      <div id="visitor-chart" class="chart"></div>
+    </div>
+    <div class="chart-card wide">
+      <h3>访问时段分布（24小时）</h3>
+      <div id="hour-chart" class="chart"></div>
+    </div>
+    <div class="chart-card">
+      <h3>星期分布</h3>
+      <div id="weekday-chart" class="chart"></div>
+    </div>
+  </div>
+
+  <div class="insights">
+    <div class="insight-card">
+      <h3>热门页面</h3>
+      <table class="data-table">
+        <thead>
+          <tr><th>页面</th><th>浏览量</th><th>独立访客</th><th>平均停留</th></tr>
+        </thead>
+        <tbody>
+          {% for p in top_pages %}
+          <tr>
+            <td class="url-cell" title="{{ p.url }}">{{ p.url_short }}</td>
+            <td>{{ "{:,}".format(p.views) }}</td>
+            <td>{{ "{:,}".format(p.visitors) }}</td>
+            <td>{{ p.avg_dur }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4" class="empty">暂无数据</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="insight-card">
+      <h3>流量来源</h3>
+      {% if top_referrers %}
+      <ul class="rank-list">
+        {% for domain, count in top_referrers %}
+        <li><span class="rank-name">{{ domain }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无来源（多为直接访问）</p>
+      {% endif %}
+      <h3 class="sub">搜索关键词</h3>
+      {% if top_keywords %}
+      <ul class="rank-list">
+        {% for kw, count in top_keywords %}
+        <li><span class="rank-name">{{ kw }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无搜索词</p>
+      {% endif %}
+    </div>
+    <div class="insight-card">
+      <h3>UTM 渠道</h3>
+      <h4 class="sub">来源 (utm_source)</h4>
+      {% if top_utm_source %}
+      <ul class="rank-list">
+        {% for src, count in top_utm_source %}
+        <li><span class="rank-name">{{ src }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无 UTM 来源</p>
+      {% endif %}
+      <h4 class="sub">媒介 (utm_medium)</h4>
+      {% if top_utm_medium %}
+      <ul class="rank-list">
+        {% for med, count in top_utm_medium %}
+        <li><span class="rank-name">{{ med }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无 UTM 媒介</p>
+      {% endif %}
+      <h4 class="sub">活动 (utm_campaign)</h4>
+      {% if top_utm_campaign %}
+      <ul class="rank-list">
+        {% for cmp, count in top_utm_campaign %}
+        <li><span class="rank-name">{{ cmp }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无 UTM 活动</p>
+      {% endif %}
+    </div>
+    <div class="insight-card">
+      <h3>会话落地页 <span class="badge est">估算</span></h3>
+      <h4 class="sub">入口页（会话首屏）</h4>
+      {% if top_entries %}
+      <ul class="rank-list">
+        {% for url, count in top_entries %}
+        <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无数据</p>
+      {% endif %}
+      <h4 class="sub">出口页（会话末屏）</h4>
+      {% if top_exits %}
+      <ul class="rank-list">
+        {% for url, count in top_exits %}
+        <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无数据</p>
+      {% endif %}
+    </div>
+    <div class="insight-card">
+      <h3>浏览器 / 操作系统 <span class="badge est">粗分</span></h3>
+      <h4 class="sub">浏览器</h4>
+      {% if top_browsers %}
+      <ul class="rank-list">
+        {% for b, count in top_browsers %}
+        <li><span class="rank-name">{{ b }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无数据</p>
+      {% endif %}
+      <h4 class="sub">操作系统</h4>
+      {% if top_os %}
+      <ul class="rank-list">
+        {% for o, count in top_os %}
+        <li><span class="rank-name">{{ o }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无数据</p>
+      {% endif %}
     </div>
   </div>
 
   <div class="snippet">
-    <h3>Embed this on your site</h3>
+    <h3>在你的网站中嵌入统计代码</h3>
     <div class="snippet-box">
       <div class="snippet-code" id="snippet-text">&lt;script src="{{ origin }}/snippet.js" defer&gt;&lt;/script&gt;</div>
-      <button class="copy-btn" onclick="copySnippet()">Copy</button>
+      <button class="copy-btn" onclick="copySnippet()">复制</button>
     </div>
   </div>
 </div>
