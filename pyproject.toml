@@ -44,7 +44,7 @@ dev = [
 ]
 
 [project.scripts]
-smart-analytics = "tiny_analytics.cli:main"
+smart-analytics = "smart_analytics.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/fireboltby/smart-analytics"
@@ -59,10 +59,10 @@ include = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/tiny_analytics"]
+packages = ["src/smart_analytics"]
 artifacts = [
-    "src/tiny_analytics/static/**/*",
-    "src/tiny_analytics/templates/**/*",
+    "src/smart_analytics/static/**/*",
+    "src/smart_analytics/templates/**/*",
 ]
 
 [tool.pytest.ini_options]

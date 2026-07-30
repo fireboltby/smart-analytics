@@ -94,11 +94,11 @@ class Settings(BaseSettings):
     password: str = "changeme"
     secret_key: str = "change-this-to-a-random-string"
     allowed_origins: list[str] = []
-    db_path: str = str(BASE_DIR / "tiny_analytics.db")
+    db_path: str = str(BASE_DIR / "smart_analytics.db")
 
 
 settings = Settings()
-signer = URLSafeSerializer(settings.secret_key, salt="tiny_analytics")
+signer = URLSafeSerializer(settings.secret_key, salt="smart_analytics")
 
 
 # ---------------------------------------------------------------------------

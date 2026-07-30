@@ -57,7 +57,7 @@ def main():
     import sys
     sys.stdout.flush()
 
-    uvicorn.run("tiny_analytics.app:app", host=args.host, port=args.port, log_level="info")
+    uvicorn.run("smart_analytics.app:app", host=args.host, port=args.port, log_level="info")
 
 
 if __name__ == "__main__":
