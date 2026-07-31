@@ -29,7 +29,7 @@ function initCharts(data) {
       type: 'category',
       data: data.timeLabels,
       axisLine: { lineStyle: { color: dark.border } },
-      axisLabel: { color: dark.muted, rotate: 45 }
+      axisLabel: { color: dark.muted, rotate: 45, hideOverlap: true }
     },
     yAxis: {
       type: 'value',

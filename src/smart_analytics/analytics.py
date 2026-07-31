@@ -174,7 +174,12 @@ def reconstruct_sessions(rows):
 def bucket_timestamp(ts_str: str, interval: str) -> str:
     """Bucket a timestamp string into the specified interval."""
     dt = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
-    if interval == "15m":
+    if interval == "1m":
+        return dt.strftime("%Y-%m-%d %H:%M")
+    elif interval == "5m":
+        minute = (dt.minute // 5) * 5
+        return dt.strftime(f"%Y-%m-%d %H:{minute:02d}")
+    elif interval == "15m":
         minute = (dt.minute // 15) * 15
         return dt.strftime(f"%Y-%m-%d %H:{minute:02d}")
     elif interval == "1h":
@@ -262,7 +267,7 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     所有 SQL 均带 `site_id = ?` 过滤——这是多站点隔离的唯一出口，
     任何新增指标都必须经此函数或复用其查询模式，禁止在别处裸写 pageviews 查询。
     """
-    if interval not in ("15m", "1h", "1d"):
+    if interval not in ("1m", "5m", "15m", "1h", "1d"):
         interval = "1h"
 
     now = datetime.now(BEIJING)

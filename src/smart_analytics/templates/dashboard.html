@@ -41,6 +41,8 @@
     </div>
     <div class="control-group">
       <label>统计间隔</label>
+      <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分钟</a>
+      <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分钟</a>
       <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分钟</a>
       <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1小时</a>
       <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1天</a>
