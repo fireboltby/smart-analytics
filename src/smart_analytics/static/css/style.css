@@ -46,16 +46,6 @@ nav h1 {
   margin: 0;
 }
 
-nav h1 a {
-  color: inherit;
-  font-size: inherit;
-  text-decoration: none;
-}
-
-nav h1 a:hover {
-  color: var(--accent);
-}
-
 nav .links {
   display: flex;
   gap: 1rem;
