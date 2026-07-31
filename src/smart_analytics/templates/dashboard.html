@@ -137,6 +137,18 @@
       </table>
     </div>
     <div class="insight-card">
+      <h3>高频 IP <span class="badge est">真人</span></h3>
+      {% if top_ips %}
+      <ul class="rank-list">
+        {% for ip, views, visitors in top_ips %}
+        <li><span class="rank-name" title="{{ ip }}">{{ ip }}</span><span class="rank-val">{{ "{:,}".format(views) }} 次 / {{ "{:,}".format(visitors) }} 人</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">暂无数据</p>
+      {% endif %}
+    </div>
+    <div class="insight-card">
       <h3>流量来源</h3>
       {% if top_referrers %}
       <ul class="rank-list">

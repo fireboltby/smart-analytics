@@ -328,7 +328,7 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
 
     # 拉取窗口内明细行，单次遍历完成所有拆解
     rows = conn.execute("""
-        SELECT ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec
+        SELECT ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec, ip
         FROM pageviews WHERE site_id = ? AND ts >= ?
     """, (site_id, since)).fetchall()
 
@@ -344,6 +344,10 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     bucket_bots: dict[str, set[str]] = {}
     country_counts: dict[str, int] = {}
     device_counts = {"desktop": 0, "mobile": 0, "tablet": 0, "unknown": 0}
+
+    # 高频 IP（复用真人过滤；跳过无法解析/隐私占位）
+    ip_views: dict[str, int] = {}
+    ip_visitors: dict[str, set] = {}
 
     page_stats: dict[str, dict] = {}
     referrer_counts: dict[str, int] = {}
@@ -377,6 +381,11 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
         device_counts[device] = device_counts.get(device, 0) + 1
         browser_counts[detect_browser(ua)] = browser_counts.get(detect_browser(ua), 0) + 1
         os_counts[detect_os(ua)] = os_counts.get(detect_os(ua), 0) + 1
+
+        ip_addr = r["ip"] or ""
+        if ip_addr and ip_addr not in ("unknown", "未知"):
+            ip_views[ip_addr] = ip_views.get(ip_addr, 0) + 1
+            ip_visitors.setdefault(ip_addr, set()).add(vh)
 
         ps = page_stats.setdefault(url, {"views": 0, "visitors": set(), "durations": []})
         ps["views"] += 1
@@ -456,6 +465,9 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
 
     top_browsers = sorted(browser_counts.items(), key=lambda x: -x[1])[:10]
     top_os = sorted(os_counts.items(), key=lambda x: -x[1])[:10]
+
+    top_ips = sorted(ip_views.items(), key=lambda x: -x[1])[:15]
+    top_ips_out = [(ip, views, len(ip_visitors.get(ip, set()))) for ip, views in top_ips]
 
     # 时序数据
     all_buckets = sorted(set(bucket_humans.keys()) | set(bucket_bots.keys()))
@@ -538,6 +550,7 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
         "top_exits": top_exits,
         "top_browsers": top_browsers,
         "top_os": top_os,
+        "top_ips": top_ips_out,
         "chart_data": chart_data,
     }
 
@@ -552,7 +565,7 @@ def get_logs(conn, site_id: int, limit: int, offset: int, filter_type: str = "al
         "SELECT COUNT(*) as cnt FROM pageviews WHERE site_id = ?", (site_id,)
     ).fetchone()["cnt"]
     rows = conn.execute("""
-        SELECT id, ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec
+        SELECT id, ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec, ip
         FROM pageviews WHERE site_id = ? ORDER BY ts DESC LIMIT ? OFFSET ?
     """, (site_id, limit, offset)).fetchall()
 
@@ -571,6 +584,7 @@ def get_logs(conn, site_id: int, limit: int, offset: int, filter_type: str = "al
             "url": r["url"],
             "url_short": (r["url"][:50] + "...") if len(r["url"]) > 50 else r["url"],
             "ref_short": (r["referrer"] or "—")[:30],
+            "ip": r["ip"] or "—",
             "country": COUNTRY_NAMES.get(r["country"], r["country"]) if r["country"] else "—",
             "device": DEVICE_NAMES.get(r["device"], r["device"]) if r["device"] else "—",
             "duration": f"{r['duration_sec']}秒" if r["duration_sec"] else "—",

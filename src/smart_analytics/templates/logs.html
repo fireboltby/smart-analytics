@@ -37,6 +37,7 @@
         <th>来源</th>
         <th>国家/地区</th>
         <th>设备</th>
+        <th>IP</th>
         <th>停留时长</th>
         <th>类型</th>
       </tr>
@@ -50,6 +51,7 @@
           <td>{{ row.ref_short }}</td>
           <td>{{ row.country }}</td>
           <td>{{ row.device }}</td>
+          <td class="ip-cell">{{ row.ip }}</td>
           <td>{{ row.duration }}</td>
           <td>
             {% if row.is_bot %}
@@ -61,7 +63,7 @@
         </tr>
         {% endfor %}
       {% else %}
-        <tr><td colspan="7">暂无访问记录</td></tr>
+        <tr><td colspan="8">暂无访问记录</td></tr>
       {% endif %}
     </tbody>
   </table>

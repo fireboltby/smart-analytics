@@ -142,12 +142,15 @@ def init_db():
             conn.execute("ALTER TABLE pageviews ADD COLUMN device TEXT")
         if "duration_sec" not in columns:
             conn.execute("ALTER TABLE pageviews ADD COLUMN duration_sec INTEGER")
+        if "ip" not in columns:
+            conn.execute("ALTER TABLE pageviews ADD COLUMN ip TEXT")
 
         # 索引（含复合索引以支撑按站点查询）
         conn.execute("CREATE INDEX IF NOT EXISTS idx_ts ON pageviews(ts)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_visitor ON pageviews(visitor_hash)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_country ON pageviews(country)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_device ON pageviews(device)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_ip ON pageviews(ip)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_site_ts ON pageviews(site_id, ts)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_site_visitor ON pageviews(site_id, visitor_hash)")
 
@@ -543,9 +546,9 @@ async def track(hit: Hit, request: Request):
     conn = get_db()
     try:
         conn.execute(
-            """INSERT INTO pageviews (site_id, ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)""",
-            (site_id, datetime.now(BEIJING).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, device),
+            """INSERT INTO pageviews (site_id, ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec, ip)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)""",
+            (site_id, datetime.now(BEIJING).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, device, ip),
         )
         row_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         conn.commit()

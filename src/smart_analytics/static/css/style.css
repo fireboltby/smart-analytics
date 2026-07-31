@@ -262,6 +262,12 @@ th, td {
   border-bottom: 1px solid var(--border);
 }
 
+.ip-cell {
+  font-family: 'SF Mono', 'Cascadia Code', Monaco, Consolas, monospace;
+  font-size: 0.8rem;
+  color: var(--accent);
+}
+
 th {
   background: var(--bg);
   font-weight: 600;
