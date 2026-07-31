@@ -45,3 +45,7 @@ uv.lock
 
 # Local database
 *.db
+
+# GeoIP database (downloaded via scripts/fetch_geoip.py, not committed)
+*.mmdb
+data/GeoIP.mmdb

@@ -132,3 +132,30 @@ cp /opt/smart-analytics/data/smart_analytics.db /backup/sa-$(date +%F).db
   不涉及 HabitHero 任何目录或 `systemctl` 单元。
 - 如未来需要停止 smart-analytics，仅 `sudo systemctl stop smart-analytics.service`，
   HabitHero 不受影响、继续运行。
+
+---
+
+## 10. 启用国家/地区识别（离线 GeoIP）
+
+仪表盘「国家/地区」默认只认 Cloudflare 的 `CF-IPCountry` 头。若前端**未套 Cloudflare**，
+该头不存在，国家恒为空。改为用已采集的访客 IP 查本地 GeoIP 库（DB-IP 免费版，CC-BY 4.0，无需 license key）。
+
+```bash
+cd /www/wwwroot/smart-analytics        # 或你的部署目录
+# 1) 安装新依赖（geoip2）
+./venv/bin/pip install -e .
+# 2) 下载 GeoIP 库到 data/GeoIP.mmdb（约 8MB，自动选最近月份）
+python scripts/fetch_geoip.py
+# 3) 回填历史记录（country 为 NULL 且有 IP 的行）
+SMART_ANALYTICS_DB_PATH=/www/wwwroot/smart-analytics/data/smart_analytics.db \
+    python scripts/backfill_country.py
+# 4) 重启服务生效
+sudo systemctl restart smart-analytics.service
+```
+
+- 库文件 `data/GeoIP.mmdb` **不入库**（已加 `.gitignore`），需每台服务器自行下载。
+- 下载失败多为服务器无外网：确认能访问 `https://download.db-ip.com`。
+- 展示国家数据须保留页脚 DB-IP 署名（CC-BY 4.0 要求），勿删除。
+- 想换库位置：设环境变量 `SMART_ANALYTICS_GEOIP_DB=/path/GeoIP.mmdb`。
+- 定期更新：把第 2 步加入 cron（每月一次）即可保持库新鲜。
+

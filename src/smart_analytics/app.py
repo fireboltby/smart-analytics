@@ -536,7 +536,7 @@ async def track(hit: Hit, request: Request):
     ua = request.headers.get("user-agent", "")
     # 关键：visitor_hash 纳入 site_id，杜绝跨站同人误并（闭坑）
     visitor_hash = hashlib.sha256(f"{site_id}:{ip}:{ua}".encode()).hexdigest()[:32]
-    country = get_country(request)
+    country = get_country(request, ip)
     device = detect_device(ua)
 
     sid = hit.sid or hashlib.sha256(

@@ -73,6 +73,25 @@ nav a:hover {
   color: var(--accent);
 }
 
+/* Footer (GeoIP attribution) */
+.site-footer {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.site-footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+}
+
 /* Controls */
 .controls {
   display: flex;

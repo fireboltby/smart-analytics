@@ -66,12 +66,17 @@ def detect_device(user_agent: str) -> str:
     return "desktop"
 
 
-def get_country(request: Request) -> str | None:
-    """Get country code from Cloudflare header."""
+def get_country(request: Request, ip: str | None = None) -> str | None:
+    """Get country code.
+
+    优先用 Cloudflare 的 CF-IPCountry 头；否则用已采集的访客 IP 查本地 GeoIP 库。
+    """
     cf_country = request.headers.get("cf-ipcountry")
     if cf_country and cf_country != "XX":
         return cf_country
-    return None
+    from .geoip import ip_to_country
+
+    return ip_to_country(ip)
 
 
 # ---------------------------------------------------------------------------
