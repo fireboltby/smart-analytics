@@ -34,6 +34,8 @@
   <div class="controls">
     <div class="control-group">
       <label>时间范围</label>
+      <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1小时</a>
+      <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2小时</a>
       <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6小时</a>
       <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24小时</a>
       <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
