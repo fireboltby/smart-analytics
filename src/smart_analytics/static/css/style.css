@@ -107,9 +107,21 @@ nav a:hover {
 /* Stats grid */
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat {
@@ -382,6 +394,136 @@ tr:hover td {
   opacity: 0.9;
 }
 
+.login-alt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.login-alt a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.login-error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* Site switcher (nav dropdown) */
+.site-switcher select {
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  max-width: 200px;
+}
+
+/* 无站点空面板 */
+.empty-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.empty-panel h2 { margin-top: 0; }
+.empty-panel p { color: var(--muted); }
+
+.btn {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.7rem 1.4rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Sites management */
+.sites-create {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.site-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+
+.site-form input {
+  flex: 1 1 200px;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.site-form button,
+.sites-table .danger-btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.sites-table .danger-btn {
+  background: var(--red);
+}
+
+.sites-title { color: var(--muted); font-weight: 500; }
+
+.sites-table .site-snippet {
+  display: inline-block;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  background: var(--bg);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.copy-btn.small {
+  position: static;
+  transform: none;
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  background: var(--border);
+}
+
+.snippet-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 0.6rem;
+}
+
 /* Period-over-period delta badge */
 .stat .num {
   display: flex;
@@ -437,6 +579,23 @@ tr:hover td {
 
 .insight-card h3.sub {
   margin-top: 1.2rem;
+}
+
+/* 落单卡片占满整行，避免右侧空白 */
+.insight-card.full {
+  grid-column: 1 / -1;
+}
+
+.insight-card.full .two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+}
+
+@media (max-width: 900px) {
+  .insight-card.full .two-col {
+    grid-template-columns: 1fr;
+  }
 }
 
 .data-table {

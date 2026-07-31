@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}smart-analytics - 站点管理{% endblock %}
+
+{% block body %}
+<div class="container">
+  <nav>
+    <h1>📊 smart-analytics / 站点管理</h1>
+    <div class="links">
+      <a href="/">仪表盘</a>
+      <a href="/settings">设置</a>
+      <a href="/logout">退出登录</a>
+    </div>
+  </nav>
+
+  <div class="sites-create">
+    <h3>新建站点</h3>
+    <form method="post" action="/sites/create" class="site-form">
+      <input type="text" name="name" placeholder="站点名称（如：我的博客）" required>
+      <input type="text" name="domain" placeholder="域名（可选，如：example.com）">
+      <button type="submit">创建站点</button>
+    </form>
+  </div>
+
+  <h3 class="sites-title">我的站点（{{ sites | length }}）</h3>
+  {% if sites %}
+  <table class="sites-table">
+    <thead>
+      <tr><th>名称</th><th>域名</th><th>统计脚本</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+      {% for s in sites %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.domain or '—' }}</td>
+        <td>
+          <code class="site-snippet">&lt;script src="{{ origin }}/s/{{ s.token }}.js" defer&gt;&lt;/script&gt;</code>
+          <button class="copy-btn small" onclick="copyText('{{ origin }}/s/{{ s.token }}.js')">复制脚本地址</button>
+        </td>
+        <td>
+          <form method="post" action="/sites/delete" onsubmit="return confirm('确定删除「{{ s.name }}」？该站所有访问数据将一并清除，且不可恢复。');">
+            <input type="hidden" name="site" value="{{ s.id }}">
+            <button type="submit" class="danger-btn">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">还没有站点，先在上方创建一个吧。</p>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      event.target.textContent = '已复制！';
+      setTimeout(() => { event.target.textContent = '复制脚本地址'; }, 1500);
+    });
+  }
+</script>
+{% endblock %}

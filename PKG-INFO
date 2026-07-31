@@ -47,8 +47,8 @@ Minimal, privacy-focused web analytics. Self-hosted, no cookies, no tracking IDs
 uv tool install smart-analytics
 
 # Configure (create a .env file or set environment variables)
-export TINY_ANALYTICS_PASSWORD="your-secret-password"
-export TINY_ANALYTICS_SECRET_KEY="$(openssl rand -hex 32)"
+export SMART_ANALYTICS_PASSWORD="your-secret-password"
+export SMART_ANALYTICS_SECRET_KEY="$(openssl rand -hex 32)"
 
 # Run
 smart-analytics
@@ -132,12 +132,12 @@ No cookies. No localStorage. No tracking across sites.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TINY_ANALYTICS_PASSWORD` | `changeme` | Dashboard login password |
-| `TINY_ANALYTICS_SECRET_KEY` | `change-this...` | Session signing key (generate a random string) |
-| `TINY_ANALYTICS_ALLOWED_ORIGINS` | `[]` | Restrict tracking to specific domains (empty = allow all) |
-| `TINY_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite database location |
-| `TINY_ANALYTICS_HOST` | `0.0.0.0` | Host to bind to |
-| `TINY_ANALYTICS_PORT` | `8000` | Port to listen on |
+| `SMART_ANALYTICS_PASSWORD` | `changeme` | Dashboard login password |
+| `SMART_ANALYTICS_SECRET_KEY` | `change-this...` | Session signing key (generate a random string) |
+| `SMART_ANALYTICS_ALLOWED_ORIGINS` | `[]` | Restrict tracking to specific domains (empty = allow all) |
+| `SMART_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite database location |
+| `SMART_ANALYTICS_HOST` | `0.0.0.0` | Host to bind to |
+| `SMART_ANALYTICS_PORT` | `8000` | Port to listen on |
 
 ## Deployment
 
@@ -151,8 +151,8 @@ After=network.target
 [Service]
 User=www-data
 WorkingDirectory=/opt/smart-analytics
-Environment="TINY_ANALYTICS_PASSWORD=your-password"
-Environment="TINY_ANALYTICS_SECRET_KEY=your-secret-key"
+Environment="SMART_ANALYTICS_PASSWORD=your-password"
+Environment="SMART_ANALYTICS_SECRET_KEY=your-secret-key"
 ExecStart=/usr/local/bin/smart-analytics
 Restart=always
 

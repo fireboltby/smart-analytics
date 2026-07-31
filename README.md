@@ -10,9 +10,10 @@
 # 安装
 uv tool install smart-analytics
 
-# 配置（创建一个 .env 文件，或直接设置环境变量）
-export TINY_ANALYTICS_PASSWORD="your-secret-password"
-export TINY_ANALYTICS_SECRET_KEY="$(openssl rand -hex 32)"
+# 首次启动后访问 /register 注册首个管理员账户（注册者自动成为默认站点 owner）。
+# 如需固定密码（推荐生产环境），设环境变量后启动会据此自动创建管理员：
+export SMART_ANALYTICS_PASSWORD="your-secret-password"
+export SMART_ANALYTICS_SECRET_KEY="$(openssl rand -hex 32)"
 
 # 运行
 smart-analytics
@@ -104,12 +105,12 @@ smart-analytics
 
 | 变量 | 默认值 | 说明 |
 |----------|---------|-------------|
-| `TINY_ANALYTICS_PASSWORD` | `changeme` | 仪表盘登录密码 |
-| `TINY_ANALYTICS_SECRET_KEY` | `change-this...` | 会话签名密钥（请生成随机字符串） |
-| `TINY_ANALYTICS_ALLOWED_ORIGINS` | `[]` | 限制可上报的域名（空 = 允许所有） |
-| `TINY_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite 数据库位置 |
-| `TINY_ANALYTICS_HOST` | `0.0.0.0` | 绑定的主机 |
-| `TINY_ANALYTICS_PORT` | `8000` | 监听端口 |
+| `SMART_ANALYTICS_PASSWORD` | 无（留空则走 /register 注册流程） | 设此环境变量后，首次启动会据此自动创建管理员账户；不设则访问 /register 手动注册 |
+| `SMART_ANALYTICS_SECRET_KEY` | `change-this...` | 会话签名密钥（请生成随机字符串） |
+| `SMART_ANALYTICS_ALLOWED_ORIGINS` | `[]` | 限制可上报的域名（空 = 允许所有） |
+| `SMART_ANALYTICS_DB_PATH` | `./smart_analytics.db` | SQLite 数据库位置 |
+| `SMART_ANALYTICS_HOST` | `0.0.0.0` | 绑定的主机 |
+| `SMART_ANALYTICS_PORT` | `8000` | 监听端口 |
 
 ## 部署
 
@@ -123,8 +124,8 @@ After=network.target
 [Service]
 User=www-data
 WorkingDirectory=/opt/smart-analytics
-Environment="TINY_ANALYTICS_PASSWORD=your-password"
-Environment="TINY_ANALYTICS_SECRET_KEY=your-secret-key"
+Environment="SMART_ANALYTICS_PASSWORD=your-password"
+Environment="SMART_ANALYTICS_SECRET_KEY=your-secret-key"
 ExecStart=/usr/local/bin/smart-analytics
 Restart=always
 

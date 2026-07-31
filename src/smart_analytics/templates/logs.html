@@ -6,8 +6,17 @@
 <div class="container wide">
   <nav>
     <h1>📊 smart-analytics / 访问日志</h1>
+    {% if site %}
+    <form method="get" action="/switch-site" class="site-switcher">
+      <select name="site" onchange="this.form.submit()">
+        {% for s in sites %}<option value="{{ s.id }}" {% if s.id == site.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select>
+    </form>
+    {% endif %}
     <div class="links">
       <a href="/">仪表盘</a>
+      <a href="/sites">管理站点</a>
+      <a href="/settings">设置</a>
       <a href="/logout">退出登录</a>
     </div>
   </nav>

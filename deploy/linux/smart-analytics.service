@@ -1,0 +1,25 @@
+[Unit]
+Description=smart-analytics - privacy-focused web analytics
+After=network.target
+# 注意：本单元与 HabitHero 无任何依赖/冲突关系，二者是两台独立服务、各自独立端口。
+
+[Service]
+Type=simple
+User=smartanalytics
+Group=smartanalytics
+WorkingDirectory=/opt/smart-analytics
+# 通过 EnvironmentFile 注入固定 SECRET_KEY 等配置（与 HabitHero 的环境完全隔离）
+EnvironmentFile=/opt/smart-analytics/.env
+# 仅监听回环地址，由 nginx 做反向代理与 TLS 终结
+ExecStart=/opt/smart-analytics/venv/bin/python -m smart_analytics.cli --host 127.0.0.1 --port 8001
+Restart=always
+RestartSec=3
+# 进程权限收敛
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/smart-analytics/data
+
+[Install]
+WantedBy=multi-user.target

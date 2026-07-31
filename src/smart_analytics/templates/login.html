@@ -6,8 +6,10 @@
 <div class="login-container">
   <h2>smart-analytics</h2>
   <form method="post" action="/login">
-    <input type="password" name="password" placeholder="请输入密码" required autofocus>
+    <input type="email" name="email" placeholder="邮箱" required autofocus>
+    <input type="password" name="password" placeholder="密码" required>
     <button type="submit">登录</button>
   </form>
+  <p class="login-alt">还没有账户？<a href="/register">注册新账户</a></p>
 </div>
 {% endblock %}

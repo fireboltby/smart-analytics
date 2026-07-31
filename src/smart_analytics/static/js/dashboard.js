@@ -183,13 +183,14 @@ window.addEventListener('resize', () => {
   });
 });
 
-// 实时在线人数轮询
+// 实时在线人数轮询（按当前站点隔离）
 function startRealtime() {
   const el = document.getElementById('realtime-count');
   if (!el) return;
+  const site = el.dataset.site || '';
   async function tick() {
     try {
-      const res = await fetch('/api/realtime');
+      const res = await fetch('/api/realtime?site=' + encodeURIComponent(site));
       if (res.ok) {
         const d = await res.json();
         el.textContent = (d.online || 0).toLocaleString();

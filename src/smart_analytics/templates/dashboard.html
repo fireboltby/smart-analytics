@@ -10,11 +10,26 @@
 <div class="container">
   <nav>
     <h1>📊 smart-analytics</h1>
+    <form method="get" action="/switch-site" class="site-switcher">
+      <select name="site" onchange="this.form.submit()">
+        {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id == site.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+      </select>
+    </form>
     <div class="links">
       <a href="/logs">访问日志</a>
+      <a href="/sites">管理站点</a>
+      <a href="/settings">设置</a>
       <a href="/logout">退出登录</a>
     </div>
   </nav>
+
+  {% if no_site %}
+  <div class="empty-panel">
+    <h2>你还没有任何站点</h2>
+    <p>创建一个站点，把统计脚本嵌入你的网站即可开始收集数据。</p>
+    <a class="btn" href="/sites">前往创建站点 →</a>
+  </div>
+  {% else %}
 
   <div class="controls">
     <div class="control-group">
@@ -61,7 +76,7 @@
     </div>
     <div class="stat">
       <h3>实时在线</h3>
-      <div class="num" id="realtime-count">{{ "{:,}".format(online_now) }}</div>
+      <div class="num" id="realtime-count" data-site="{{ site.id }}">{{ "{:,}".format(online_now) }}</div>
     </div>
     <div class="stat">
       <h3>跳出率 <span class="badge est">估算</span></h3>
@@ -90,13 +105,13 @@
       <h3>新/老访客</h3>
       <div id="visitor-chart" class="chart"></div>
     </div>
-    <div class="chart-card wide">
-      <h3>访问时段分布（24小时）</h3>
-      <div id="hour-chart" class="chart"></div>
-    </div>
     <div class="chart-card">
       <h3>星期分布</h3>
       <div id="weekday-chart" class="chart"></div>
+    </div>
+    <div class="chart-card wide">
+      <h3>访问时段分布（24小时）</h3>
+      <div id="hour-chart" class="chart"></div>
     </div>
   </div>
 
@@ -199,44 +214,55 @@
       <p class="empty">暂无数据</p>
       {% endif %}
     </div>
-    <div class="insight-card">
+    <div class="insight-card full">
       <h3>浏览器 / 操作系统 <span class="badge est">粗分</span></h3>
-      <h4 class="sub">浏览器</h4>
-      {% if top_browsers %}
-      <ul class="rank-list">
-        {% for b, count in top_browsers %}
-        <li><span class="rank-name">{{ b }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="empty">暂无数据</p>
-      {% endif %}
-      <h4 class="sub">操作系统</h4>
-      {% if top_os %}
-      <ul class="rank-list">
-        {% for o, count in top_os %}
-        <li><span class="rank-name">{{ o }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="empty">暂无数据</p>
-      {% endif %}
+      <div class="two-col">
+        <div>
+          <h4 class="sub">浏览器</h4>
+          {% if top_browsers %}
+          <ul class="rank-list">
+            {% for b, count in top_browsers %}
+            <li><span class="rank-name">{{ b }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">暂无数据</p>
+          {% endif %}
+        </div>
+        <div>
+          <h4 class="sub">操作系统</h4>
+          {% if top_os %}
+          <ul class="rank-list">
+            {% for o, count in top_os %}
+            <li><span class="rank-name">{{ o }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">暂无数据</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="snippet">
-    <h3>在你的网站中嵌入统计代码</h3>
+    <h3>在「{{ site.name }}」中嵌入统计代码</h3>
     <div class="snippet-box">
-      <div class="snippet-code" id="snippet-text">&lt;script src="{{ origin }}/snippet.js" defer&gt;&lt;/script&gt;</div>
+      <div class="snippet-code" id="snippet-text">&lt;script src="{{ origin }}/s/{{ site.token }}.js" defer&gt;&lt;/script&gt;</div>
       <button class="copy-btn" onclick="copySnippet()">复制</button>
     </div>
+    <p class="snippet-hint">该脚本仅统计「{{ site.name }}」的数据，token 随机生成不可枚举。</p>
   </div>
+
+  {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/dashboard.js"></script>
+{% if not no_site %}
+<script src="/static/js/dashboard.js?v=3"></script>
 <script>
   initCharts({{ chart_data | tojson }});
 </script>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}smart-analytics - 设置{% endblock %}
+
+{% block head %}
+<style>
+  .settings-card {
+    max-width: 480px;
+    margin: 24px auto;
+    padding: 24px;
+    background: #1b1f2a;
+    border: 1px solid #2a2f3a;
+    border-radius: 12px;
+  }
+  .settings-card h3 { margin-top: 0; }
+  .settings-card .muted { color: #9aa4b2; font-size: 14px; line-height: 1.6; margin: 8px 0 0; }
+  .settings-card label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 14px;
+    color: #9aa4b2;
+  }
+  .settings-card input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #2a2f3a;
+    background: #0f131c;
+    color: #e6e9ef;
+    box-sizing: border-box;
+  }
+  .settings-card button {
+    margin-top: 18px;
+    width: 100%;
+    padding: 11px;
+    border: none;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .settings-card button:hover { background: #2f6fd6; }
+  .msg { min-height: 20px; font-size: 14px; margin: 10px 0 0; }
+  .msg.ok { color: #34d399; }
+  .msg.err { color: #f87171; }
+  .notice { color: #fbbf24; line-height: 1.6; }
+  code { background: #0f131c; padding: 2px 6px; border-radius: 4px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container">
+  <nav>
+    <h1>📊 smart-analytics / 设置</h1>
+    <div class="links">
+      <a href="/">仪表盘</a>
+      <a href="/logs">访问日志</a>
+      <a href="/sites">管理站点</a>
+      <a href="/logout">退出登录</a>
+    </div>
+  </nav>
+
+  <div class="settings-card">
+    <h3>修改登录密码</h3>
+    {% if env_fixed %}
+      <p class="notice">当前密码由环境变量 <code>SMART_ANALYTICS_PASSWORD</code> 固定，无法在此页面修改。请通过环境变量更改后重启服务。</p>
+    {% else %}
+      <form id="pw-form">
+        <label>当前密码
+          <input type="password" name="current_password" id="current_password" required autocomplete="current-password">
+        </label>
+        <label>新密码（至少 6 位）
+          <input type="password" name="new_password" id="new_password" required autocomplete="new-password" minlength="6">
+        </label>
+        <label>确认新密码
+          <input type="password" name="confirm_password" id="confirm_password" required autocomplete="new-password" minlength="6">
+        </label>
+        <p class="msg" id="msg"></p>
+        <button type="submit">保存修改</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if is_admin %}
+  <div class="settings-card">
+    <h3>创建账户</h3>
+    <p class="muted">创建一个普通成员账户，自动加入默认站点（只读仪表盘数据）。</p>
+    <form id="create-user-form">
+      <label>邮箱
+        <input type="email" name="email" id="cu_email" required autocomplete="email">
+      </label>
+      <label>密码（至少 6 位）
+        <input type="password" name="password" id="cu_password" required autocomplete="new-password" minlength="6">
+      </label>
+      <p class="msg" id="cu_msg"></p>
+      <button type="submit">创建账户</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const form = document.getElementById('pw-form');
+  const msg = document.getElementById('msg');
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg'; msg.textContent = '';
+      const cur = document.getElementById('current_password').value;
+      const nw = document.getElementById('new_password').value;
+      const cf = document.getElementById('confirm_password').value;
+      if (nw.length < 6) { msg.className = 'msg err'; msg.textContent = '新密码至少 6 位'; return; }
+      if (nw !== cf) { msg.className = 'msg err'; msg.textContent = '两次输入的新密码不一致'; return; }
+      try {
+        const resp = await fetch('/api/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ current_password: cur, new_password: nw })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          msg.className = 'msg ok'; msg.textContent = (data.msg || '密码已更新') + ' 即将退出登录…';
+          setTimeout(() => { window.location.href = '/logout'; }, 1500);
+        } else {
+          msg.className = 'msg err'; msg.textContent = data.detail || '修改失败';
+        }
+      } catch (err) {
+        msg.className = 'msg err'; msg.textContent = '请求失败，请重试';
+      }
+    });
+  }
+
+  const cuForm = document.getElementById('create-user-form');
+  const cuMsg = document.getElementById('cu_msg');
+  if (cuForm) {
+    cuForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      cuMsg.className = 'msg'; cuMsg.textContent = '';
+      const email = document.getElementById('cu_email').value.trim();
+      const pw = document.getElementById('cu_password').value;
+      if (pw.length < 6) { cuMsg.className = 'msg err'; cuMsg.textContent = '密码至少 6 位'; return; }
+      try {
+        const resp = await fetch('/api/create-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ email, password: pw })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          cuMsg.className = 'msg ok'; cuMsg.textContent = data.msg || '创建成功';
+          cuForm.reset();
+        } else {
+          cuMsg.className = 'msg err'; cuMsg.textContent = data.detail || '创建失败';
+        }
+      } catch (err) {
+        cuMsg.className = 'msg err'; cuMsg.textContent = '请求失败，请重试';
+      }
+    });
+  }
+</script>
+{% endblock %}
