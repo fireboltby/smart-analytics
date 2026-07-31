@@ -29,9 +29,11 @@ body {
   margin: 0 auto;
 }
 
+/*
 .container.wide {
   max-width: 1400px;
 }
+*/
 
 /* Navigation */
 nav {
