@@ -35,7 +35,7 @@
         <td>
           {% if s.domain %}
             {% set url = s.domain if s.domain.startswith('http://') or s.domain.startswith('https://') else 'https://' + s.domain %}
-            <a href="{{ url }}" class="domain-link" target="_blank" rel="noopener noreferrer">{{ s.domain }}</a>
+            <a href="{{ url }}" class="domain-link" target="_blank" rel="noopener noreferrer" onclick="window.open(this.href,'_blank','noopener,noreferrer');return false;">{{ s.domain }}</a>
           {% else %}
             —
           {% endif %}
