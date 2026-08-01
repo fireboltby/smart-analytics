@@ -26,7 +26,8 @@ def candidate_urls() -> list[str]:
     now = datetime.now()
     ym = now.strftime("%Y-%m")
     prev = (now.replace(day=1) - timedelta(days=1)).strftime("%Y-%m")
-    base = "https://download.db-ip.com/free/dbip-country-lite-{}.mmdb.gz"
+    # city-lite 含国家/省份/城市（CC-BY 4.0，无需 license key）
+    base = "https://download.db-ip.com/free/dbip-city-lite-{}.mmdb.gz"
     return [base.format(ym), base.format(prev)]
 
 

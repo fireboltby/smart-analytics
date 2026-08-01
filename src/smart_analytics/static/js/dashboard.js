@@ -87,6 +87,62 @@ function initCharts(data) {
     }]
   });
 
+  // 省份分布图表
+  echarts.init(document.getElementById('region-chart')).setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: dark.card,
+      borderColor: dark.border,
+      textStyle: { color: dark.text }
+    },
+    grid: { left: 100, right: 20, top: 10, bottom: 10 },
+    xAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisLabel: { color: dark.muted },
+      splitLine: { lineStyle: { color: dark.border } }
+    },
+    yAxis: {
+      type: 'category',
+      data: data.regionLabels.slice().reverse(),
+      axisLine: { show: false },
+      axisLabel: { color: dark.muted }
+    },
+    series: [{
+      type: 'bar',
+      data: data.regionValues.slice().reverse(),
+      itemStyle: { color: dark.accent, borderRadius: [0, 4, 4, 0] }
+    }]
+  });
+
+  // 城市分布图表
+  echarts.init(document.getElementById('city-chart')).setOption({
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: dark.card,
+      borderColor: dark.border,
+      textStyle: { color: dark.text }
+    },
+    grid: { left: 100, right: 20, top: 10, bottom: 10 },
+    xAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisLabel: { color: dark.muted },
+      splitLine: { lineStyle: { color: dark.border } }
+    },
+    yAxis: {
+      type: 'category',
+      data: data.cityLabels.slice().reverse(),
+      axisLine: { show: false },
+      axisLabel: { color: dark.muted }
+    },
+    series: [{
+      type: 'bar',
+      data: data.cityValues.slice().reverse(),
+      itemStyle: { color: dark.green, borderRadius: [0, 4, 4, 0] }
+    }]
+  });
+
   // 设备分布图表
   echarts.init(document.getElementById('device-chart')).setOption({
     tooltip: {

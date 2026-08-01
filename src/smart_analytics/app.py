@@ -28,6 +28,7 @@ from smart_analytics.analytics import (
     BEIJING,
     detect_device,
     get_country,
+    get_location,
     compute_dashboard,
     get_logs,
 )
@@ -144,6 +145,10 @@ def init_db():
             conn.execute("ALTER TABLE pageviews ADD COLUMN duration_sec INTEGER")
         if "ip" not in columns:
             conn.execute("ALTER TABLE pageviews ADD COLUMN ip TEXT")
+        if "region" not in columns:
+            conn.execute("ALTER TABLE pageviews ADD COLUMN region TEXT")
+        if "city" not in columns:
+            conn.execute("ALTER TABLE pageviews ADD COLUMN city TEXT")
 
         # 索引（含复合索引以支撑按站点查询）
         conn.execute("CREATE INDEX IF NOT EXISTS idx_ts ON pageviews(ts)")
@@ -151,6 +156,8 @@ def init_db():
         conn.execute("CREATE INDEX IF NOT EXISTS idx_country ON pageviews(country)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_device ON pageviews(device)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_ip ON pageviews(ip)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_region ON pageviews(region)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_city ON pageviews(city)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_site_ts ON pageviews(site_id, ts)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_site_visitor ON pageviews(site_id, visitor_hash)")
 
@@ -536,7 +543,10 @@ async def track(hit: Hit, request: Request):
     ua = request.headers.get("user-agent", "")
     # 关键：visitor_hash 纳入 site_id，杜绝跨站同人误并（闭坑）
     visitor_hash = hashlib.sha256(f"{site_id}:{ip}:{ua}".encode()).hexdigest()[:32]
-    country = get_country(request, ip)
+    loc = get_location(request, ip)
+    country = loc["country_code"]
+    region = loc["region"]
+    city = loc["city"]
     device = detect_device(ua)
 
     sid = hit.sid or hashlib.sha256(
@@ -546,9 +556,9 @@ async def track(hit: Hit, request: Request):
     conn = get_db()
     try:
         conn.execute(
-            """INSERT INTO pageviews (site_id, ts, url, referrer, visitor_hash, user_agent, country, device, duration_sec, ip)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)""",
-            (site_id, datetime.now(BEIJING).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, device, ip),
+            """INSERT INTO pageviews (site_id, ts, url, referrer, visitor_hash, user_agent, country, region, city, device, duration_sec, ip)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)""",
+            (site_id, datetime.now(BEIJING).isoformat(), hit.url, hit.referrer, visitor_hash, ua, country, region, city, device, ip),
         )
         row_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
         conn.commit()

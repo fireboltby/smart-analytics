@@ -35,7 +35,8 @@
         <th>时间</th>
         <th>页面</th>
         <th>来源</th>
-        <th>国家/地区</th>
+        <th>国家</th>
+        <th>省份</th>
         <th>设备</th>
         <th>IP</th>
         <th>停留时长</th>
@@ -48,8 +49,9 @@
         <tr>
           <td>{{ row.ts_short }}</td>
           <td title="{{ row.url }}">{{ row.url_short }}</td>
-          <td>{{ row.ref_short }}</td>
+          <td title="{{ row.referrer }}">{{ row.ref_short }}</td>
           <td>{{ row.country }}</td>
+          <td>{{ row.region }}</td>
           <td>{{ row.device }}</td>
           <td class="ip-cell">{{ row.ip }}</td>
           <td>{{ row.duration }}</td>
@@ -63,7 +65,7 @@
         </tr>
         {% endfor %}
       {% else %}
-        <tr><td colspan="8">暂无访问记录</td></tr>
+        <tr><td colspan="9">暂无访问记录</td></tr>
       {% endif %}
     </tbody>
   </table>
