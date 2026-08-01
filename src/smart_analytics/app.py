@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     password: str = "changeme"
     secret_key: str = "change-this-to-a-random-string"
     allowed_origins: list[str] = []
-    db_path: str = str(BASE_DIR / "smart_analytics.db")
+    db_path: str = str(BASE_DIR.parent.parent / "data" / "smart_analytics.db")
     admin_email: str = "admin@localhost"
     # 注册开关：自托管默认开放；设为 false 可关闭公开注册（仅引导管理员可用）
     open_register: bool = True
