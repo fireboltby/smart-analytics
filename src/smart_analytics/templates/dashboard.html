@@ -152,8 +152,14 @@
       <h3>高频 IP <span class="badge est">真人</span></h3>
       {% if top_ips %}
       <ul class="rank-list">
-        {% for ip, views, visitors in top_ips %}
-        <li><span class="rank-name" title="{{ ip }}">{{ ip }}</span><span class="rank-val">{{ "{:,}".format(views) }} 次 / {{ "{:,}".format(visitors) }} 人</span></li>
+        {% for ip, views, visitors, location in top_ips %}
+        <li>
+          <span class="rank-name" title="{{ ip }}">
+            {{ ip }}
+            <span class="ip-geo">{{ location }}</span>
+          </span>
+          <span class="rank-val">{{ "{:,}".format(views) }} 次 / {{ "{:,}".format(visitors) }} 人</span>
+        </li>
         {% endfor %}
       </ul>
       {% else %}

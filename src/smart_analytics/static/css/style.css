@@ -670,6 +670,12 @@ tr:hover td {
   font-variant-numeric: tabular-nums;
 }
 
+.ip-geo {
+  margin-left: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85em;
+}
+
 .empty {
   color: var(--muted);
   font-size: 0.8rem;

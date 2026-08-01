@@ -455,7 +455,16 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     top_os = sorted(os_counts.items(), key=lambda x: -x[1])[:10]
 
     top_ips = sorted(ip_views.items(), key=lambda x: -x[1])[:15]
-    top_ips_out = [(ip, views, len(ip_visitors.get(ip, set()))) for ip, views in top_ips]
+    from .geoip import ip_to_location
+
+    top_ips_out = []
+    for ip, views in top_ips:
+        visitors_count = len(ip_visitors.get(ip, set()))
+        loc = ip_to_location(ip) or {}
+        country = loc.get("country") or "—"
+        city = loc.get("city") or ""
+        location = f"{country} {city}".strip() if city else country
+        top_ips_out.append((ip, views, visitors_count, location))
 
     # 时序数据
     all_buckets = sorted(set(bucket_humans.keys()) | set(bucket_bots.keys()))
