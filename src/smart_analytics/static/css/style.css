@@ -517,6 +517,14 @@ tr:hover td {
 
 .sites-title { color: var(--muted); font-weight: 500; }
 
+.sites-table .domain-link {
+  color: var(--accent);
+  text-decoration: none;
+}
+.sites-table .domain-link:hover {
+  text-decoration: underline;
+}
+
 .sites-table .site-snippet {
   display: inline-block;
   max-width: 420px;

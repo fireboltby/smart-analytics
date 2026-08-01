@@ -32,7 +32,14 @@
       {% for s in sites %}
       <tr>
         <td>{{ s.name }}</td>
-        <td>{{ s.domain or '—' }}</td>
+        <td>
+          {% if s.domain %}
+            {% set url = s.domain if s.domain.startswith('http://') or s.domain.startswith('https://') else 'https://' + s.domain %}
+            <a href="{{ url }}" class="domain-link" target="_blank" rel="noopener noreferrer">{{ s.domain }}</a>
+          {% else %}
+            —
+          {% endif %}
+        </td>
         <td>
           <code class="site-snippet">&lt;script src="{{ origin }}/s/{{ s.token }}.js" defer&gt;&lt;/script&gt;</code>
           <button class="copy-btn small" onclick="copyText('{{ origin }}/s/{{ s.token }}.js')">复制脚本地址</button>
