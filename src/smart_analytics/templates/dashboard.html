@@ -215,28 +215,34 @@
       <p class="empty">暂无 UTM 活动</p>
       {% endif %}
     </div>
-    <div class="insight-card">
+    <div class="insight-card full">
       <h3>会话落地页 <span class="badge est">估算</span></h3>
-      <h4 class="sub">入口页（会话首屏）</h4>
-      {% if top_entries %}
-      <ul class="rank-list">
-        {% for url, count in top_entries %}
-        <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="empty">暂无数据</p>
-      {% endif %}
-      <h4 class="sub">出口页（会话末屏）</h4>
-      {% if top_exits %}
-      <ul class="rank-list">
-        {% for url, count in top_exits %}
-        <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
-        {% endfor %}
-      </ul>
-      {% else %}
-      <p class="empty">暂无数据</p>
-      {% endif %}
+      <div class="two-col">
+        <div>
+          <h4 class="sub">入口页（会话首屏）</h4>
+          {% if top_entries %}
+          <ul class="rank-list">
+            {% for url, count in top_entries %}
+            <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">暂无数据</p>
+          {% endif %}
+        </div>
+        <div>
+          <h4 class="sub">出口页（会话末屏）</h4>
+          {% if top_exits %}
+          <ul class="rank-list">
+            {% for url, count in top_exits %}
+            <li><span class="rank-name" title="{{ url }}">{{ url[:60] + '…' if url|length > 60 else url }}</span><span class="rank-val">{{ "{:,}".format(count) }}</span></li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">暂无数据</p>
+          {% endif %}
+        </div>
+      </div>
     </div>
     <div class="insight-card full">
       <h3>浏览器 / 操作系统 <span class="badge est">粗分</span></h3>
