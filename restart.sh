@@ -3,8 +3,8 @@
 # 生产环境重启脚本（smart-analytics）
 #
 # 用法（在项目根目录执行）：
-#   bash scripts/restart.sh
-#   ./scripts/restart.sh          # 需先 chmod +x scripts/restart.sh
+#   ./restart.sh
+#   bash restart.sh
 #
 # 行为：
 #   1. 杀掉正在运行的 smart_analytics.cli 进程
@@ -14,8 +14,8 @@
 #
 set -euo pipefail
 
-# 切到脚本所在目录的上一级（项目根）
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# 切到脚本所在目录（项目根）
+ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
 HOST="${SMART_ANALYTICS_HOST:-127.0.0.1}"
@@ -43,7 +43,6 @@ if [ ! -x "$VENV_PY" ] && [ ! -f "$VENV_PY" ]; then
 fi
 
 echo "==> 启动服务 (host=$HOST port=$PORT)"
-# 若 .env 已提供 HOST/PORT 则使用，否则回退默认值
 nohup "$VENV_PY" -m smart_analytics.cli --host "$HOST" --port "$PORT" > run.log 2>&1 &
 
 echo "==> 等待服务就绪"
