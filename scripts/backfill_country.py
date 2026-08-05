@@ -6,8 +6,9 @@
 用法:
     python scripts/backfill_country.py
     python scripts/backfill_country.py --force            # 强制重新解析所有已记录 IP 的行
+    python scripts/backfill_country.py --device           # 重新解析 device 字段（修正 iPadOS 等被误判为桌面端）
     SMART_ANALYTICS_DB_PATH=/www/wwwroot/smart-analytics/data/smart_analytics.db \
-        python scripts/backfill_country.py
+        python scripts/backfill_country.py --device --force
 """
 from __future__ import annotations
 
@@ -27,6 +28,11 @@ def main() -> int:
         "--force",
         action="store_true",
         help="强制重新解析所有带 IP 的记录（默认只填 country/region/city 任一为空者）",
+    )
+    parser.add_argument(
+        "--device",
+        action="store_true",
+        help="重新解析所有带 user_agent 的记录的 device 字段（修正 iPadOS 等被误判为桌面端）",
     )
     args = parser.parse_args()
 
@@ -64,6 +70,21 @@ def main() -> int:
         conn.commit()
         mode = "强制重新解析" if args.force else "回填空值"
         print(f"{mode}: 待处理 {total} 行，成功写入国家/省份/城市 {updated} 行。")
+
+        if args.device:
+            from smart_analytics.analytics import detect_device
+            drows = conn.execute(
+                "SELECT id, user_agent, device FROM pageviews WHERE user_agent IS NOT NULL"
+            ).fetchall()
+            dtotal = len(drows)
+            dupdated = 0
+            for row_id, ua, old_dev in drows:
+                new_dev = detect_device(ua)
+                if new_dev != old_dev:
+                    conn.execute("UPDATE pageviews SET device = ? WHERE id = ?", (new_dev, row_id))
+                    dupdated += 1
+            conn.commit()
+            print(f"device 重解析: 处理 {dtotal} 行，更新 {dupdated} 行（desktop/mobile/tablet）。")
         return 0
     finally:
         conn.close()
