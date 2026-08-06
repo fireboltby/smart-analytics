@@ -1,0 +1,7 @@
+{% if sites %}
+<form method="get" action="/switch-site" class="site-switcher">
+  <select name="site" onchange="this.form.submit()">
+    {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id == site.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+</form>
+{% endif %}

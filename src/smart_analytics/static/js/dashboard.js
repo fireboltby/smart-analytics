@@ -10,32 +10,59 @@ const dark = {
   red: '#f85149'
 };
 
+// 浅色（普通模式）调色板，与 CSS [data-theme="light"] 变量保持一致
+const light = {
+  bg: '#f6f8fa',
+  card: '#ffffff',
+  border: '#d0d7de',
+  text: '#1f2328',
+  muted: '#656d76',
+  accent: '#0969da',
+  green: '#1a7f37',
+  red: '#cf222e'
+};
+
+// 安全初始化：先 dispose 已存在的实例，避免二次 init 报错（换肤重绘时复用同一 DOM）
+function chart(id) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  try {
+    const ex = echarts.getInstanceByDom(el);
+    if (ex) ex.dispose();
+  } catch (e) {}
+  try { return echarts.init(el); } catch (e) { return null; }
+}
+
+let __dashData = null;
 function initCharts(data) {
+  __dashData = data;
+  const c = document.documentElement.getAttribute('data-theme') === 'light' ? light : dark;
+  // 注意：以下所有图表配色均使用 c.（随 data-theme 在 light/dark 间切换）
   // 访问趋势图表
-  echarts.init(document.getElementById('traffic-chart')).setOption({
+  chart('traffic-chart').setOption({
     tooltip: {
       trigger: 'axis',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text }
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text }
     },
     legend: {
       bottom: 0,
-      textStyle: { color: dark.muted },
+      textStyle: { color: c.muted },
       data: ['真人', '机器人']
     },
     grid: { left: 40, right: 20, top: 20, bottom: 40 },
     xAxis: {
       type: 'category',
       data: data.timeLabels,
-      axisLine: { lineStyle: { color: dark.border } },
-      axisLabel: { color: dark.muted, rotate: 45, hideOverlap: true }
+      axisLine: { lineStyle: { color: c.border } },
+      axisLabel: { color: c.muted, rotate: 45, hideOverlap: true }
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: dark.muted },
-      splitLine: { lineStyle: { color: dark.border } }
+      axisLabel: { color: c.muted },
+      splitLine: { lineStyle: { color: c.border } }
     },
     series: [
       {
@@ -44,8 +71,8 @@ function initCharts(data) {
         smooth: true,
         data: data.humanValues,
         areaStyle: { opacity: 0.2 },
-        lineStyle: { color: dark.accent },
-        itemStyle: { color: dark.accent }
+        lineStyle: { color: c.accent },
+        itemStyle: { color: c.accent }
       },
       {
         name: '机器人',
@@ -53,132 +80,132 @@ function initCharts(data) {
         smooth: true,
         data: data.botValues,
         areaStyle: { opacity: 0.1 },
-        lineStyle: { color: dark.red },
-        itemStyle: { color: dark.red }
+        lineStyle: { color: c.red },
+        itemStyle: { color: c.red }
       }
     ]
   });
 
   // 国家/地区图表
-  echarts.init(document.getElementById('geo-chart')).setOption({
+  chart('geo-chart').setOption({
     tooltip: {
       trigger: 'axis',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text }
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text }
     },
     grid: { left: 100, right: 20, top: 10, bottom: 10 },
     xAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: dark.muted },
-      splitLine: { lineStyle: { color: dark.border } }
+      axisLabel: { color: c.muted },
+      splitLine: { lineStyle: { color: c.border } }
     },
     yAxis: {
       type: 'category',
       data: data.countryLabels.slice().reverse(),
       axisLine: { show: false },
-      axisLabel: { color: dark.muted }
+      axisLabel: { color: c.muted }
     },
     series: [{
       type: 'bar',
       data: data.countryValues.slice().reverse(),
-      itemStyle: { color: dark.green, borderRadius: [0, 4, 4, 0] }
+      itemStyle: { color: c.green, borderRadius: [0, 4, 4, 0] }
     }]
   });
 
   // 省份分布图表
-  echarts.init(document.getElementById('region-chart')).setOption({
+  chart('region-chart').setOption({
     tooltip: {
       trigger: 'axis',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text }
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text }
     },
     grid: { left: 100, right: 20, top: 10, bottom: 10 },
     xAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: dark.muted },
-      splitLine: { lineStyle: { color: dark.border } }
+      axisLabel: { color: c.muted },
+      splitLine: { lineStyle: { color: c.border } }
     },
     yAxis: {
       type: 'category',
       data: data.regionLabels.slice().reverse(),
       axisLine: { show: false },
-      axisLabel: { color: dark.muted }
+      axisLabel: { color: c.muted }
     },
     series: [{
       type: 'bar',
       data: data.regionValues.slice().reverse(),
-      itemStyle: { color: dark.accent, borderRadius: [0, 4, 4, 0] }
+      itemStyle: { color: c.accent, borderRadius: [0, 4, 4, 0] }
     }]
   });
 
   // 城市分布图表
-  echarts.init(document.getElementById('city-chart')).setOption({
+  chart('city-chart').setOption({
     tooltip: {
       trigger: 'axis',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text }
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text }
     },
     grid: { left: 100, right: 20, top: 10, bottom: 10 },
     xAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: dark.muted },
-      splitLine: { lineStyle: { color: dark.border } }
+      axisLabel: { color: c.muted },
+      splitLine: { lineStyle: { color: c.border } }
     },
     yAxis: {
       type: 'category',
       data: data.cityLabels.slice().reverse(),
       axisLine: { show: false },
-      axisLabel: { color: dark.muted }
+      axisLabel: { color: c.muted }
     },
     series: [{
       type: 'bar',
       data: data.cityValues.slice().reverse(),
-      itemStyle: { color: dark.green, borderRadius: [0, 4, 4, 0] }
+      itemStyle: { color: c.green, borderRadius: [0, 4, 4, 0] }
     }]
   });
 
   // 设备分布图表
-  echarts.init(document.getElementById('device-chart')).setOption({
+  chart('device-chart').setOption({
     tooltip: {
       trigger: 'item',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text }
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text }
     },
     series: [{
       type: 'pie',
       radius: ['45%', '70%'],
       center: ['50%', '50%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 6, borderColor: dark.bg, borderWidth: 2 },
-      label: { show: true, position: 'outside', color: dark.muted, formatter: '{b}\n{c}' },
+      itemStyle: { borderRadius: 6, borderColor: c.bg, borderWidth: 2 },
+      label: { show: true, position: 'outside', color: c.muted, formatter: '{b}\n{c}' },
       data: [
-        { value: data.devices.desktop, name: '桌面端', itemStyle: { color: dark.accent } },
-        { value: data.devices.mobile, name: '移动端', itemStyle: { color: dark.green } },
-        { value: data.devices.tablet, name: '平板', itemStyle: { color: dark.muted } }
+        { value: data.devices.desktop, name: '桌面端', itemStyle: { color: c.accent } },
+        { value: data.devices.mobile, name: '移动端', itemStyle: { color: c.green } },
+        { value: data.devices.tablet, name: '平板', itemStyle: { color: c.muted } }
       ]
     }]
   });
 
   // 新/老访客环形图
   const totalVR = (data.newVisitors || 0) + (data.returningVisitors || 0);
-  echarts.init(document.getElementById('visitor-chart')).setOption({
+  chart('visitor-chart').setOption({
     tooltip: {
       trigger: 'item',
-      backgroundColor: dark.card,
-      borderColor: dark.border,
-      textStyle: { color: dark.text },
+      backgroundColor: c.card,
+      borderColor: c.border,
+      textStyle: { color: c.text },
       formatter: '{b}: {c} ({d}%)'
     },
     legend: {
       bottom: 0,
-      textStyle: { color: dark.muted },
+      textStyle: { color: c.muted },
       data: ['新访客', '老访客']
     },
     series: [{
@@ -186,11 +213,11 @@ function initCharts(data) {
       radius: ['45%', '70%'],
       center: ['50%', '45%'],
       avoidLabelOverlap: false,
-      itemStyle: { borderRadius: 6, borderColor: dark.bg, borderWidth: 2 },
-      label: { show: true, position: 'outside', color: dark.muted, formatter: '{b}\n{c}' },
+      itemStyle: { borderRadius: 6, borderColor: c.bg, borderWidth: 2 },
+      label: { show: true, position: 'outside', color: c.muted, formatter: '{b}\n{c}' },
       data: [
-        { value: data.newVisitors || 0, name: '新访客', itemStyle: { color: dark.accent } },
-        { value: data.returningVisitors || 0, name: '老访客', itemStyle: { color: dark.green } }
+        { value: data.newVisitors || 0, name: '新访客', itemStyle: { color: c.accent } },
+        { value: data.returningVisitors || 0, name: '老访客', itemStyle: { color: c.green } }
       ]
     }]
   });
@@ -200,23 +227,28 @@ function initCharts(data) {
   }
 
   // 访问时段分布（24h）
-  echarts.init(document.getElementById('hour-chart')).setOption({
-    tooltip: { trigger: 'axis', backgroundColor: dark.card, borderColor: dark.border, textStyle: { color: dark.text } },
+  chart('hour-chart').setOption({
+    tooltip: { trigger: 'axis', backgroundColor: c.card, borderColor: c.border, textStyle: { color: c.text } },
     grid: { left: 40, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'category', data: data.hourLabels, axisLine: { lineStyle: { color: dark.border } }, axisLabel: { color: dark.muted, interval: 1, rotate: 45 } },
-    yAxis: { type: 'value', axisLine: { show: false }, axisLabel: { color: dark.muted }, splitLine: { lineStyle: { color: dark.border } } },
-    series: [{ type: 'bar', data: data.hourValues, itemStyle: { color: dark.accent, borderRadius: [3, 3, 0, 0] } }]
+    xAxis: { type: 'category', data: data.hourLabels, axisLine: { lineStyle: { color: c.border } }, axisLabel: { color: c.muted, interval: 1, rotate: 45 } },
+    yAxis: { type: 'value', axisLine: { show: false }, axisLabel: { color: c.muted }, splitLine: { lineStyle: { color: c.border } } },
+    series: [{ type: 'bar', data: data.hourValues, itemStyle: { color: c.accent, borderRadius: [3, 3, 0, 0] } }]
   });
 
   // 星期分布
-  echarts.init(document.getElementById('weekday-chart')).setOption({
-    tooltip: { trigger: 'axis', backgroundColor: dark.card, borderColor: dark.border, textStyle: { color: dark.text } },
+  chart('weekday-chart').setOption({
+    tooltip: { trigger: 'axis', backgroundColor: c.card, borderColor: c.border, textStyle: { color: c.text } },
     grid: { left: 40, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'category', data: data.weekdayLabels, axisLine: { lineStyle: { color: dark.border } }, axisLabel: { color: dark.muted } },
-    yAxis: { type: 'value', axisLine: { show: false }, axisLabel: { color: dark.muted }, splitLine: { lineStyle: { color: dark.border } } },
-    series: [{ type: 'bar', data: data.weekdayValues, itemStyle: { color: dark.green, borderRadius: [3, 3, 0, 0] } }]
+    xAxis: { type: 'category', data: data.weekdayLabels, axisLine: { lineStyle: { color: c.border } }, axisLabel: { color: c.muted } },
+    yAxis: { type: 'value', axisLine: { show: false }, axisLabel: { color: c.muted }, splitLine: { lineStyle: { color: c.border } } },
+    series: [{ type: 'bar', data: data.weekdayValues, itemStyle: { color: c.green, borderRadius: [3, 3, 0, 0] } }]
   });
 }
+
+// 供主题切换按钮调用：用最新数据重绘全部图表（换肤时同步图表配色）
+window.__rerenderCharts = function () {
+  if (__dashData) initCharts(__dashData);
+};
 
 function copySnippet() {
   const text = document.getElementById('snippet-text').innerText;

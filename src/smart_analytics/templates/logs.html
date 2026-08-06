@@ -5,19 +5,21 @@
 {% block body %}
 <div class="container wide">
   <nav>
-    <h1><a href="/">📈 smart-analytics</a> / 访问日志</h1>
-    {% if site %}
-    <form method="get" action="/switch-site" class="site-switcher">
-      <select name="site" onchange="this.form.submit()">
-        {% for s in sites %}<option value="{{ s.id }}" {% if s.id == site.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
-      </select>
-    </form>
-    {% endif %}
+    <div class="nav-brand">
+      <h1><a href="/">📈 smart-analytics</a> / 访问日志</h1>
+    </div>
     <div class="links">
-      <a href="/">仪表盘</a>
-      <a href="/sites">管理站点</a>
-      <a href="/settings">设置</a>
-      <a href="/logout">退出登录</a>
+      <div class="nav-group">
+        <a href="/">仪表盘</a>
+        <a href="/logs" class="active">访问日志</a>
+        <a href="/sites">管理站点</a>
+        <a href="/settings">设置</a>
+        {% include "_site_switcher.html" %}
+      </div>
+      <div class="nav-actions">
+        {% include "theme_toggle.html" %}
+        <a href="/logout" class="logout-link">退出</a>
+      </div>
     </div>
   </nav>
 

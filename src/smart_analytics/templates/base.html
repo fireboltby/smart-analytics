@@ -5,12 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}smart-analytics 网站分析{% endblock %}</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
-  <link rel="stylesheet" href="/static/css/style.css?v=6">
+  <script>
+    // 无闪烁：在 CSS 应用前设定主题（默认保持当前深色外观）
+    (function () {
+      try {
+        var t = localStorage.getItem('sa-theme');
+        if (t !== 'light' && t !== 'dark') t = 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/static/css/style.css?v=21">
   {% block head %}{% endblock %}
 </head>
 <body>
   {% block body %}{% endblock %}
   {% block scripts %}{% endblock %}
+  <script>
+    // 主题切换：胶囊滑块开关，localStorage 持久化，跨页与多标签页同步
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      if (!btn) return;
+      function sync() {
+        var t = document.documentElement.getAttribute('data-theme');
+        if (t !== 'light' && t !== 'dark') t = 'dark';
+        btn.setAttribute('data-theme', t);
+        btn.title = (t === 'light') ? '切换到暗色模式' : '切换到浅色模式';
+      }
+      sync();
+      btn.addEventListener('click', function () {
+        var cur = document.documentElement.getAttribute('data-theme');
+        var next = (cur === 'light') ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('sa-theme', next); } catch (e) {}
+        sync();
+        if (typeof window.__rerenderCharts === 'function') window.__rerenderCharts();
+      });
+      window.addEventListener('storage', function (e) {
+        if (e.key === 'sa-theme' && e.newValue) {
+          document.documentElement.setAttribute('data-theme', e.newValue);
+          sync();
+          if (typeof window.__rerenderCharts === 'function') window.__rerenderCharts();
+        }
+      });
+    })();
+  </script>
   <script src="https://analytics.fireboltby.top/s/6f8f6319197b8ab96866dcec0fcd24ed.js" defer></script>
 </body>
 </html>

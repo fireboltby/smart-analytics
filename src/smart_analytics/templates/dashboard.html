@@ -9,17 +9,21 @@
 {% block body %}
 <div class="container">
   <nav>
-    <h1><a href="/">📈 smart-analytics</a></h1>
-    <form method="get" action="/switch-site" class="site-switcher">
-      <select name="site" onchange="this.form.submit()">
-        {% for s in sites %}<option value="{{ s.id }}" {% if site and s.id == site.id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
-      </select>
-    </form>
+    <div class="nav-brand">
+      <h1><a href="/">📈 smart-analytics</a></h1>
+    </div>
     <div class="links">
-      <a href="/logs">访问日志</a>
-      <a href="/sites">管理站点</a>
-      <a href="/settings">设置</a>
-      <a href="/logout">退出登录</a>
+      <div class="nav-group">
+        <a href="/" class="active">仪表盘</a>
+        <a href="/logs">访问日志</a>
+        <a href="/sites">管理站点</a>
+        <a href="/settings">设置</a>
+        {% include "_site_switcher.html" %}
+      </div>
+      <div class="nav-actions">
+        {% include "theme_toggle.html" %}
+        <a href="/logout" class="logout-link">退出</a>
+      </div>
     </div>
   </nav>
 
@@ -33,16 +37,14 @@
 
   <div class="controls">
     <div class="control-group">
-      <label>时间范围</label>
+      <span class="cg-title">时间范围</span>
       <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1小时</a>
       <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2小时</a>
       <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6小时</a>
       <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24小时</a>
       <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
       <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30天</a>
-    </div>
-    <div class="control-group">
-      <label>统计间隔</label>
+      <span class="cg-title">统计间隔</span>
       <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分钟</a>
       <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分钟</a>
       <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分钟</a>
@@ -296,7 +298,7 @@
 
 {% block scripts %}
 {% if not no_site %}
-<script src="/static/js/dashboard.js?v=3"></script>
+<script src="/static/js/dashboard.js?v=4"></script>
 <script>
   initCharts({{ chart_data | tojson }});
 </script>

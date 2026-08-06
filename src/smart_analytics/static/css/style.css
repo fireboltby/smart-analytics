@@ -11,6 +11,19 @@
   --orange: #d29922;
 }
 
+/* 浅色主题：覆盖全部 CSS 变量（普通模式） */
+[data-theme="light"] {
+  --bg: #f6f8fa;
+  --card: #ffffff;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --muted: #656d76;
+  --accent: #0969da;
+  --green: #1a7f37;
+  --red: #cf222e;
+  --orange: #9a6700;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -60,6 +73,7 @@ nav h1 a:hover {
 
 nav .links {
   display: flex;
+  align-items: center;
   gap: 1rem;
 }
 
@@ -73,6 +87,80 @@ nav a:hover {
   color: var(--accent);
 }
 
+/* 导航分组菜单：把页面链接收进一个胶囊容器 */
+nav .nav-group {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 40px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  overflow: hidden;
+}
+
+nav .nav-group a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.9rem;
+  color: var(--text);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* 用相邻选择器做分隔线，避免末尾的站点选择器造成双线 */
+nav .nav-group a + a {
+  border-left: 1px solid var(--border);
+}
+
+nav .nav-group a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* 当前页：常驻高亮 */
+nav .nav-group a.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+nav .nav-group a.active:hover {
+  filter: brightness(0.95);
+}
+
+/* 退出登录：独立强调按钮（在胶囊开关右侧） */
+/* 操作组合：把主题开关与退出登录包进同一个胶囊，形成一组 */
+nav .nav-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+}
+
+/* 组合内开关去掉自带的边框/底色，避免与外层胶囊形成套娃 */
+nav .nav-actions .theme-toggle {
+  background: transparent;
+  border-color: transparent;
+}
+
+nav .logout-link {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+nav .logout-link:hover {
+  background: var(--red);
+  color: #fff;
+}
+
 /* Controls */
 .controls {
   display: flex;
@@ -83,42 +171,70 @@ nav a:hover {
   margin-bottom: 1.5rem;
 }
 
-.control-group {
+.control-row {
   display: flex;
-  gap: 0.4rem;
   align-items: center;
-  flex-wrap: nowrap;
+  gap: 0.5rem;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
-.control-group label {
-  font-size: 0.75rem;
+.control-group .cg-title {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.85rem;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-right: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: none;
+  border-right: 1px solid var(--border);
+}
+
+/* 第二个及以后的标题（如「统计间隔」）左侧也加分隔线，区分不同维度 */
+.control-group .cg-title ~ .cg-title {
+  border-left: 1px solid var(--border);
+}
+
+/* 时间范围 / 统计间隔：分段胶囊，与导航菜单组同款（高度对齐 40px） */
+.control-group {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  overflow: hidden;
 }
 
 .control-group a {
-  padding: 0.4rem 0.7rem;
-  border-radius: 6px;
-  text-decoration: none;
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  color: var(--text);
   font-size: 0.8rem;
-  border: 1px solid var(--border);
-  background: transparent;
-  transition: all 0.15s;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.control-group a + a {
+  border-left: 1px solid var(--border);
 }
 
 .control-group a:hover {
-  border-color: var(--muted);
+  background: var(--accent);
+  color: #fff;
 }
 
 .control-group a.active {
   background: var(--accent);
   color: #fff;
-  border-color: var(--accent);
+}
+
+.control-group a.active:hover {
+  filter: brightness(0.95);
 }
 
 /* Stats grid */
@@ -440,15 +556,41 @@ tr:hover td {
   text-align: center;
 }
 
-/* Site switcher (nav dropdown) */
-.site-switcher select {
+/* 品牌 + 站点选择器 左簇（与右侧菜单/操作组并列） */
+nav .nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Site switcher —— 作为菜单组最后一个分段融入胶囊（透明底 + 左侧分隔线） */
+nav .nav-group .site-switcher {
+  display: inline-flex;
+  align-items: center;
+  border-left: 1px solid var(--border);
+}
+nav .nav-group .site-switcher select {
+  background: transparent;
+  color: var(--text);
+  border: none;
+  border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0 0.7rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+nav .nav-group .site-switcher select:hover {
+  background: var(--accent);
+  color: #fff;
+}
+nav .nav-group .site-switcher select option {
   background: var(--card);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.85rem;
-  max-width: 200px;
 }
 
 /* 无站点空面板 */
@@ -688,4 +830,69 @@ tr:hover td {
   color: var(--muted);
   font-size: 0.8rem;
   margin: 0.4rem 0;
+}
+
+/* 主题切换开关（导航栏右侧胶囊形滑块） */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  width: 60px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+/* 太阳/月亮图标：绝对定位在左右两个停靠点正中央，与 thumb 圆心重合 */
+.theme-toggle .tt-icon {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  line-height: 1;
+  z-index: 1;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  user-select: none;
+}
+
+.theme-toggle .tt-sun  { left: 15px; }
+.theme-toggle .tt-moon { left: 45px; }
+
+/* 当前模式对应图标高亮 */
+.theme-toggle[data-theme="light"] .tt-sun { opacity: 1; }
+.theme-toggle[data-theme="dark"]  .tt-moon { opacity: 1; }
+
+/* 滑块：居中停靠在太阳或月亮位置 */
+.theme-toggle .tt-thumb {
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  transform: translateY(-50%);
+  transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle[data-theme="dark"] .tt-thumb {
+  transform: translate(30px, -50%);
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+}
+
+.theme-toggle:active .tt-thumb {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.theme-toggle[data-theme="dark"]:active .tt-thumb {
+  transform: translate(30px, -50%) scale(0.95);
 }

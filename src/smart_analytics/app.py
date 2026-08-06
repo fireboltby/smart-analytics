@@ -650,8 +650,9 @@ async def sites_page(request: Request, user_id: int = Depends(require_user)):
     finally:
         conn.close()
     sites = [dict(r) for r in rows]
+    current_site, _ = resolve_current_site(request, user_id)
     origin = f"{request.url.scheme}://{request.url.netloc}"
-    return templates.TemplateResponse(request, "sites.html", {"sites": sites, "origin": origin})
+    return templates.TemplateResponse(request, "sites.html", {"sites": sites, "site": current_site, "origin": origin})
 
 
 @app.post("/sites/create")
@@ -793,7 +794,10 @@ async def logs_page(request: Request, limit: int = 100, offset: int = 0,
 async def settings_page(request: Request, user_id: int = Depends(require_user)):
     env_fixed = bool(os.environ.get("SMART_ANALYTICS_PASSWORD"))
     is_admin = user_is_admin(user_id)
-    return templates.TemplateResponse(request, "settings.html", {"env_fixed": env_fixed, "is_admin": is_admin})
+    site, sites = resolve_current_site(request, user_id)
+    return templates.TemplateResponse(request, "settings.html",
+                                     {"env_fixed": env_fixed, "is_admin": is_admin,
+                                      "site": site, "sites": sites})
 
 
 @app.post("/api/change-password")

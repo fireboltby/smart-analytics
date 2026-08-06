@@ -8,25 +8,25 @@
     max-width: 480px;
     margin: 24px auto;
     padding: 24px;
-    background: #1b1f2a;
-    border: 1px solid #2a2f3a;
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: 12px;
   }
   .settings-card h3 { margin-top: 0; }
-  .settings-card .muted { color: #9aa4b2; font-size: 14px; line-height: 1.6; margin: 8px 0 0; }
+  .settings-card .muted { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 8px 0 0; }
   .settings-card label {
     display: block;
     margin: 14px 0 6px;
     font-size: 14px;
-    color: #9aa4b2;
+    color: var(--muted);
   }
   .settings-card input {
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
-    border: 1px solid #2a2f3a;
-    background: #0f131c;
-    color: #e6e9ef;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
     box-sizing: border-box;
   }
   .settings-card button {
@@ -35,29 +35,39 @@
     padding: 11px;
     border: none;
     border-radius: 8px;
-    background: #3b82f6;
+    background: var(--accent);
     color: #fff;
     font-size: 15px;
     cursor: pointer;
+    transition: filter 0.15s ease;
   }
-  .settings-card button:hover { background: #2f6fd6; }
+  .settings-card button:hover { filter: brightness(0.92); }
   .msg { min-height: 20px; font-size: 14px; margin: 10px 0 0; }
-  .msg.ok { color: #34d399; }
-  .msg.err { color: #f87171; }
-  .notice { color: #fbbf24; line-height: 1.6; }
-  code { background: #0f131c; padding: 2px 6px; border-radius: 4px; }
+  .msg.ok { color: var(--green); }
+  .msg.err { color: var(--red); }
+  .notice { color: var(--orange); line-height: 1.6; }
+  code { background: var(--bg); padding: 2px 6px; border-radius: 4px; }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="container">
   <nav>
-    <h1><a href="/">📈 smart-analytics</a> / 设置</h1>
+    <div class="nav-brand">
+      <h1><a href="/">📈 smart-analytics</a> / 设置</h1>
+    </div>
     <div class="links">
-      <a href="/">仪表盘</a>
-      <a href="/logs">访问日志</a>
-      <a href="/sites">管理站点</a>
-      <a href="/logout">退出登录</a>
+      <div class="nav-group">
+        <a href="/">仪表盘</a>
+        <a href="/logs">访问日志</a>
+        <a href="/sites">管理站点</a>
+        <a href="/settings" class="active">设置</a>
+        {% include "_site_switcher.html" %}
+      </div>
+      <div class="nav-actions">
+        {% include "theme_toggle.html" %}
+        <a href="/logout" class="logout-link">退出</a>
+      </div>
     </div>
   </nav>
 
