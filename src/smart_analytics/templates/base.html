@@ -17,7 +17,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=27">
+  <link rel="stylesheet" href="/static/css/style.css?v=28">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -77,6 +77,14 @@
       // 点击遮罩空白处关闭
       if (backdrop) {
         backdrop.addEventListener('click', function () { setOpen(false); });
+      }
+      // 抽屉内「✕ 关闭」按钮
+      var closeBtn = nav.querySelector('.drawer-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          setOpen(false);
+        });
       }
       // 点击菜单内任意链接后自动收起（移动端体验）
       links.addEventListener('click', function (e) {

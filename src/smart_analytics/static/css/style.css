@@ -89,6 +89,23 @@ nav .links {
   gap: 1rem;
 }
 
+/* 右侧簇：桌面端包裹「导航链接 + 顶栏操作（换肤/菜单）」，保证桌面布局不变；
+   移动端抽屉(.links)被 position:fixed 抽离出流，nav-right 仅剩顶栏操作浮于右上 */
+nav .nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+nav .nav-top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 抽屉头部（标题 + 关闭）：仅移动端显示，桌面/平板隐藏 */
+nav .drawer-head { display: none; }
+
 nav a {
   color: var(--muted);
   font-size: 0.85rem;
@@ -969,6 +986,10 @@ nav .nav-group .site-switcher select option {
     width: 100%;
     justify-content: flex-start;
   }
+  nav .nav-right {
+    width: 100%;
+    margin-left: 0;
+  }
   nav .links {
     width: 100%;
     flex-wrap: wrap;
@@ -989,16 +1010,22 @@ nav .nav-group .site-switcher select option {
 @media (max-width: 560px) {
   body { padding: 1rem; }
 
-  /* ===== 顶部导航：LOGO 居左，菜单图标居右（浮层抽屉，不挤占正文） ===== */
+  /* ===== 顶部导航：LOGO 居左，换肤键 + 菜单图标居右（浮层抽屉，不挤占正文） ===== */
   nav {
     position: relative;
     flex-wrap: nowrap;
     gap: 0.75rem;
   }
+  nav .nav-right { width: auto; }   /* 覆盖平板段的 100%，恢复右上簇 */
   /* 保留 LOGO，仅在手机端隐藏文字站点名 */
   nav .nav-brand { width: auto; }
   nav .brand-name,
   nav .brand-site { display: none; }
+
+  /* 顶栏操作簇：换肤键 + 汉堡菜单靠右排列 */
+  nav .nav-top {
+    justify-content: flex-end;
+  }
 
   /* 菜单按钮：纯图标圆形按钮，无文字 */
   .nav-toggle {
@@ -1008,7 +1035,6 @@ nav .nav-group .site-switcher select option {
     flex: 0 0 auto;
     width: 44px;
     height: 44px;
-    margin-left: auto;            /* 推到最右 */
     border: 1px solid var(--border);
     border-radius: 50%;
     background: var(--card);
@@ -1022,6 +1048,8 @@ nav .nav-group .site-switcher select option {
   .nav-toggle::before { content: "☰"; }
   .nav-toggle[aria-expanded="true"]::before { content: "✕"; }
   .nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* 抽屉展开时隐藏悬浮汉堡键，改用抽屉内「✕ 关闭」，避免双关闭键重叠 */
+  nav.nav-open .nav-toggle { display: none; }
 
   /* 浮层遮罩：点击空白关闭 */
   nav .nav-backdrop {
@@ -1039,26 +1067,57 @@ nav .nav-group .site-switcher select option {
     visibility: visible;
   }
 
-  /* 抽屉：从右侧滑入，覆盖在内容之上 */
+  /* 抽屉：从右侧滑入，覆盖在内容之上（去掉右侧阴影，仅保留 1px 分隔线） */
   nav .links {
     position: fixed;
     top: 0;
     right: 0;
-    height: 100%;
-    width: min(80vw, 300px);
+    height: 100dvh;
+    width: min(82vw, 300px);
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 4.5rem 1.2rem 1.5rem;
+    gap: 0.5rem;
+    padding: 1rem 1rem 1.5rem;
     background: var(--card);
     border-left: 1px solid var(--border);
-    box-shadow: -12px 0 40px rgba(0, 0, 0, 0.4);
     z-index: 50;
     transform: translateX(102%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    overscroll-behavior: contain;   /* 防止滚动穿透到页面 */
   }
   nav.nav-open .links { transform: translateX(0); }
+
+  /* 抽屉头部：标题 + 关闭键，提升弹出菜单可读性 */
+  nav .drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.25rem 0.7rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
+  }
+  nav .drawer-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+  nav .drawer-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  nav .drawer-close:hover { background: var(--bg); color: var(--text); }
+  nav .drawer-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   nav .nav-group,
   nav .nav-actions { flex: 0 0 auto; width: 100%; }
@@ -1082,7 +1141,7 @@ nav .nav-group .site-switcher select option {
     border-top: 1px solid var(--border);
   }
   nav .nav-actions {
-    justify-content: space-between;
+    justify-content: center;
     border-radius: 14px;
     margin-top: auto;            /* 操作区沉到底部 */
     padding: 0.5rem 0.75rem;
