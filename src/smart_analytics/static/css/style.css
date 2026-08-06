@@ -1082,6 +1082,8 @@ nav .nav-group .site-switcher select option {
   /* 顶栏操作簇：换肤键 + 汉堡菜单靠右排列 */
   nav .nav-top {
     justify-content: flex-end;
+    min-height: 44px;            /* 兜底：汉堡隐藏后顶栏高度不变，避免主内容 reflow 上跳 */
+    align-items: center;
   }
 
   /* 菜单按钮：纯图标圆形按钮，无文字 */
@@ -1105,8 +1107,9 @@ nav .nav-group .site-switcher select option {
   .nav-toggle::before { content: "☰"; }
   .nav-toggle[aria-expanded="true"]::before { content: "✕"; }
   .nav-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  /* 抽屉展开时隐藏悬浮汉堡键，改用抽屉内「✕ 关闭」，避免双关闭键重叠 */
-  nav.nav-open .nav-toggle { display: none; }
+  /* 抽屉展开时隐藏悬浮汉堡键，改用抽屉内「✕ 关闭」，避免双关闭键重叠。
+     用 visibility:hidden 保留 44px 占位，不移除布局，防止 nav 高度塌缩导致主内容上跳。 */
+  nav.nav-open .nav-toggle { visibility: hidden; }
 
   /* 浮层遮罩：点击空白关闭 */
   nav .nav-backdrop {
