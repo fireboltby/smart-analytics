@@ -8,24 +8,8 @@
 
 {% block body %}
 <div class="container">
-  <nav>
-    <div class="nav-brand">
-      <h1><a href="/">📈 smart-analytics</a></h1>
-    </div>
-    <div class="links">
-      <div class="nav-group">
-        <a href="/" class="active">仪表盘</a>
-        <a href="/logs">访问日志</a>
-        <a href="/sites">管理站点</a>
-        <a href="/settings">设置</a>
-        {% include "_site_switcher.html" %}
-      </div>
-      <div class="nav-actions">
-        {% include "theme_toggle.html" %}
-        <a href="/logout" class="logout-link">退出</a>
-      </div>
-    </div>
-  </nav>
+  {% set active = "dashboard" %}
+  {% include "_nav.html" %}
 
   {% if no_site %}
   <div class="empty-panel">
@@ -38,18 +22,24 @@
   <div class="controls">
     <div class="control-group">
       <span class="cg-title">时间范围</span>
-      <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1时</a>
-      <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2时</a>
-      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6时</a>
-      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24时</a>
-      <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
-      <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30天</a>
+      <div class="cg-options">
+        <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1时</a>
+        <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2时</a>
+        <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6时</a>
+        <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24时</a>
+        <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
+        <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30天</a>
+      </div>
+    </div>
+    <div class="control-group">
       <span class="cg-title">统计间隔</span>
-      <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分</a>
-      <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分</a>
-      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分</a>
-      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1时</a>
-      <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1天</a>
+      <div class="cg-options">
+        <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分</a>
+        <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分</a>
+        <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分</a>
+        <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1时</a>
+        <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1天</a>
+      </div>
     </div>
   </div>
 

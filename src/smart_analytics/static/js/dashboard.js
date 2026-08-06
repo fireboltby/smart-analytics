@@ -26,16 +26,25 @@ const light = {
 function chart(id) {
   const el = document.getElementById(id);
   if (!el) return null;
+  // 容器尺寸为 0 时 echarts.init 会拿到 0×0 画布，后续 resize 也难恢复；先防御
+  const rect = el.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return null;
   try {
     const ex = echarts.getInstanceByDom(el);
     if (ex) ex.dispose();
   } catch (e) {}
-  try { return echarts.init(el); } catch (e) { return null; }
+  try {
+    const inst = echarts.init(el);
+    // 某些浏览器（尤其移动端 WebKit）init 时布局未稳定，立刻 resize 一次校正
+    inst.resize();
+    return inst;
+  } catch (e) { return null; }
 }
 
 let __dashData = null;
-function initCharts(data) {
-  __dashData = data;
+
+// 实际的图表初始化逻辑（在布局稳定后调用）
+function __initChartsImpl(data) {
   const c = document.documentElement.getAttribute('data-theme') === 'light' ? light : dark;
   // 注意：以下所有图表配色均使用 c.（随 data-theme 在 light/dark 间切换）
   // 访问趋势图表
@@ -245,6 +254,18 @@ function initCharts(data) {
   });
 }
 
+function initCharts(data) {
+  __dashData = data;
+  // 移动端 Safari/WebKit 在首帧常拿不到真实容器尺寸，用 setTimeout 让布局充分回流
+  setTimeout(() => {
+    __initChartsImpl(data);
+    // 多轮校正：首帧、50ms、250ms，覆盖横竖屏/抽屉展开等延迟场景
+    __resizeAllCharts();
+    setTimeout(__resizeAllCharts, 50);
+    setTimeout(__resizeAllCharts, 250);
+  }, 0);
+}
+
 // 供主题切换按钮调用：用最新数据重绘全部图表（换肤时同步图表配色）
 window.__rerenderCharts = function () {
   if (__dashData) initCharts(__dashData);
@@ -263,12 +284,25 @@ function copySnippet() {
   });
 }
 
-// 窗口缩放时重绘图表
-window.addEventListener('resize', () => {
+// 窗口缩放 / 横竖屏切换时重绘图表（rAF 节流 + 二次校正，杜绝塌缩错位）
+let __resizeChartsRAF = null;
+function __resizeAllCharts() {
   document.querySelectorAll('[id$="-chart"]').forEach(el => {
-    const chart = echarts.getInstanceByDom(el);
-    if (chart) chart.resize();
+    const inst = echarts.getInstanceByDom(el);
+    if (inst) inst.resize();
   });
+}
+function __scheduleChartResize() {
+  if (__resizeChartsRAF) cancelAnimationFrame(__resizeChartsRAF);
+  __resizeChartsRAF = requestAnimationFrame(() => {
+    __resizeAllCharts();
+    // 布局回流后再校正一次，避免响应式断点切换瞬间图表尺寸计算偏差
+    requestAnimationFrame(__resizeAllCharts);
+  });
+}
+window.addEventListener('resize', __scheduleChartResize);
+window.addEventListener('orientationchange', () => {
+  setTimeout(__resizeAllCharts, 250);
 });
 
 // 实时在线人数轮询（按当前站点隔离）

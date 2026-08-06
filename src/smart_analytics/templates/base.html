@@ -17,7 +17,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=21">
+  <link rel="stylesheet" href="/static/css/style.css?v=26">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -49,6 +49,46 @@
           sync();
           if (typeof window.__rerenderCharts === 'function') window.__rerenderCharts();
         }
+      });
+    })();
+  </script>
+  <script>
+    // 移动端导航浮层抽屉：切换展开/收起，遮罩点击与 Esc 关闭，并同步无障碍状态
+    (function () {
+      var nav = document.querySelector('nav');
+      if (!nav) return;
+      var btn = nav.querySelector('.nav-toggle');
+      var links = nav.querySelector('.links');
+      var backdrop = nav.querySelector('.nav-backdrop');
+      if (!btn || !links) return;
+      function setOpen(open) {
+        nav.classList.toggle('nav-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.setAttribute('aria-label', open ? '关闭菜单' : '打开菜单');
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setOpen(!nav.classList.contains('nav-open'));
+        // 抽屉滑入/滑出会改变可用宽度，动画结束后再触发图表重绘
+        if (typeof window.__resizeAllCharts === 'function') {
+          setTimeout(window.__resizeAllCharts, 320);
+        }
+      });
+      // 点击遮罩空白处关闭
+      if (backdrop) {
+        backdrop.addEventListener('click', function () { setOpen(false); });
+      }
+      // 点击菜单内任意链接后自动收起（移动端体验）
+      links.addEventListener('click', function (e) {
+        if (e.target.closest('a')) setOpen(false);
+      });
+      // Esc 关闭，符合无障碍预期
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && nav.classList.contains('nav-open')) setOpen(false);
+      });
+      // 回到桌面宽度时复位，避免展开状态残留
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 560 && nav.classList.contains('nav-open')) setOpen(false);
       });
     })();
   </script>

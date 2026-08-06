@@ -1,0 +1,22 @@
+<nav>
+  <div class="nav-brand">
+    <a href="/" class="brand-logo" aria-label="smart-analytics 首页">📈</a>
+    <a href="/" class="brand-name">smart-analytics</a>
+    {% if brand %}<span class="brand-site">/ {{ brand }}</span>{% endif %}
+  </div>
+  <button type="button" class="nav-toggle" aria-label="打开菜单" aria-expanded="false" aria-controls="nav-links"></button>
+  <div class="links" id="nav-links">
+    <div class="nav-group">
+      <a href="/" {% if active == "dashboard" %}class="active"{% endif %}>仪表盘</a>
+      <a href="/logs" {% if active == "logs" %}class="active"{% endif %}>访问日志</a>
+      <a href="/sites" {% if active == "sites" %}class="active"{% endif %}>管理站点</a>
+      <a href="/settings" {% if active == "settings" %}class="active"{% endif %}>设置</a>
+      {% include "_site_switcher.html" %}
+    </div>
+    <div class="nav-actions">
+      {% include "theme_toggle.html" %}
+      <a href="/logout" class="logout-link">退出</a>
+    </div>
+  </div>
+  <div class="nav-backdrop" id="nav-backdrop"></div>
+</nav>

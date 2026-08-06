@@ -4,24 +4,9 @@
 
 {% block body %}
 <div class="container wide">
-  <nav>
-    <div class="nav-brand">
-      <h1><a href="/">📈 smart-analytics</a> / 访问日志</h1>
-    </div>
-    <div class="links">
-      <div class="nav-group">
-        <a href="/">仪表盘</a>
-        <a href="/logs" class="active">访问日志</a>
-        <a href="/sites">管理站点</a>
-        <a href="/settings">设置</a>
-        {% include "_site_switcher.html" %}
-      </div>
-      <div class="nav-actions">
-        {% include "theme_toggle.html" %}
-        <a href="/logout" class="logout-link">退出</a>
-      </div>
-    </div>
-  </nav>
+  {% set active = "logs" %}
+  {% set brand = "访问日志" %}
+  {% include "_nav.html" %}
 
   <div class="filters">
     <a href="/logs?filter=all" {% if filter == "all" %}class="active"{% endif %}>全部</a>
@@ -49,15 +34,15 @@
       {% if rows %}
         {% for row in rows %}
         <tr>
-          <td>{{ row.ts_short }}</td>
-          <td title="{{ row.url }}">{{ row.url_short }}</td>
-          <td title="{{ row.referrer }}">{{ row.ref_short }}</td>
-          <td>{{ row.country }}</td>
-          <td>{{ row.region }}</td>
-          <td>{{ row.device }}</td>
-          <td class="ip-cell">{{ row.ip }}</td>
-          <td>{{ row.duration }}</td>
-          <td>
+          <td data-label="时间">{{ row.ts_short }}</td>
+          <td data-label="页面" title="{{ row.url }}">{{ row.url_short }}</td>
+          <td data-label="来源" title="{{ row.referrer }}">{{ row.ref_short }}</td>
+          <td data-label="国家">{{ row.country }}</td>
+          <td data-label="省份">{{ row.region }}</td>
+          <td data-label="设备">{{ row.device }}</td>
+          <td data-label="IP" class="ip-cell">{{ row.ip }}</td>
+          <td data-label="停留时长">{{ row.duration }}</td>
+          <td data-label="类型">
             {% if row.is_bot %}
             <span class="badge bot">机器人</span>
             {% else %}
