@@ -38,17 +38,17 @@
   <div class="controls">
     <div class="control-group">
       <span class="cg-title">时间范围</span>
-      <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1小时</a>
-      <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2小时</a>
-      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6小时</a>
-      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24小时</a>
+      <a href="/?hours=1&interval={{ interval }}" {% if hours == 1 %}class="active"{% endif %}>1时</a>
+      <a href="/?hours=2&interval={{ interval }}" {% if hours == 2 %}class="active"{% endif %}>2时</a>
+      <a href="/?hours=6&interval={{ interval }}" {% if hours == 6 %}class="active"{% endif %}>6时</a>
+      <a href="/?hours=24&interval={{ interval }}" {% if hours == 24 %}class="active"{% endif %}>24时</a>
       <a href="/?hours=168&interval={{ interval }}" {% if hours == 168 %}class="active"{% endif %}>7天</a>
       <a href="/?hours=720&interval={{ interval }}" {% if hours == 720 %}class="active"{% endif %}>30天</a>
       <span class="cg-title">统计间隔</span>
-      <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分钟</a>
-      <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分钟</a>
-      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分钟</a>
-      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1小时</a>
+      <a href="/?hours={{ hours }}&interval=1m" {% if interval == "1m" %}class="active"{% endif %}>1分</a>
+      <a href="/?hours={{ hours }}&interval=5m" {% if interval == "5m" %}class="active"{% endif %}>5分</a>
+      <a href="/?hours={{ hours }}&interval=15m" {% if interval == "15m" %}class="active"{% endif %}>15分</a>
+      <a href="/?hours={{ hours }}&interval=1h" {% if interval == "1h" %}class="active"{% endif %}>1时</a>
       <a href="/?hours={{ hours }}&interval=1d" {% if interval == "1d" %}class="active"{% endif %}>1天</a>
     </div>
   </div>
