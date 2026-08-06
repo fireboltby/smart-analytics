@@ -17,7 +17,7 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=29">
+  <link rel="stylesheet" href="/static/css/style.css?v=30">
   {% block head %}{% endblock %}
 </head>
 <body>
@@ -98,6 +98,27 @@
       window.addEventListener('resize', function () {
         if (window.innerWidth > 560 && nav.classList.contains('nav-open')) setOpen(false);
       });
+    })();
+  </script>
+  <script>
+    // 顶栏站点名(brand-site)点击展开/收起站点下拉，与抽屉内站点选择器功能一致
+    (function () {
+      var btn = document.getElementById('brandSiteBtn');
+      var menu = document.getElementById('brandSiteMenu');
+      if (!btn || !menu) return;
+      function setOpen(open) {
+        menu.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.classList.toggle('open', open);
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setOpen(menu.hidden);
+      });
+      // 点击菜单内部不冒泡关闭，点击菜单项(<a>)会触发导航跳转
+      menu.addEventListener('click', function (e) { e.stopPropagation(); });
+      document.addEventListener('click', function () { setOpen(false); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
     })();
   </script>
   <script src="https://analytics.fireboltby.top/s/6f8f6319197b8ab96866dcec0fcd24ed.js" defer></script>

@@ -2,7 +2,23 @@
   <div class="nav-brand">
     <a href="/" class="brand-logo" aria-label="smart-analytics 首页">📈</a>
     <a href="/" class="brand-name">smart-analytics</a>
-    {% if brand %}<span class="brand-site">/ {{ brand }}</span>{% endif %}
+    {% if brand %}
+    <div class="brand-site-wrap">
+      <button type="button" class="brand-site" id="brandSiteBtn" aria-haspopup="true" aria-expanded="false" aria-label="切换站点">
+        <span class="bs-text">/ {{ brand }}</span><span class="bs-caret" aria-hidden="true">▾</span>
+      </button>
+      {% if sites %}
+      <div class="brand-site-menu" id="brandSiteMenu" role="menu" hidden>
+        {% for s in sites %}
+        <a href="/switch-site?site={{ s.id }}" role="menuitem" class="bs-item{% if site and s.id == site.id %} is-current{% endif %}">
+          <span class="bs-name">{{ s.name }}</span>
+          {% if site and s.id == site.id %}<span class="bs-check" aria-hidden="true">✓</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 
   <div class="nav-right">
