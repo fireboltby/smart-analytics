@@ -54,6 +54,15 @@ TABLET_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
+# iPadOS 13+ 的 Safari 默认 UA 与 Mac 完全一致（Apple 隐私设计），
+# 纯靠 UA 无法 100% 区分。启发式：Mac 形态且只有 Safari（不含 Chrome/Edge
+# 等桌面浏览器标识）时，倾向判为平板（iPad 远比 Mac 上 Safari 常见）。
+_DESKTOP_BROWSER_PATTERNS = re.compile(
+    r"Chrome|Edg|OPR|Firefox|Trident|MSIE", re.IGNORECASE
+)
+_MAC_PATTERNS = re.compile(r"Macintosh|Mac OS X", re.IGNORECASE)
+_SAFARI_PATTERNS = re.compile(r"Safari", re.IGNORECASE)
+
 
 def detect_device(user_agent: str) -> str:
     """Detect device type from user agent."""
@@ -63,6 +72,12 @@ def detect_device(user_agent: str) -> str:
         return "tablet"
     if MOBILE_PATTERNS.search(user_agent):
         return "mobile"
+    if (
+        _MAC_PATTERNS.search(user_agent)
+        and _SAFARI_PATTERNS.search(user_agent)
+        and not _DESKTOP_BROWSER_PATTERNS.search(user_agent)
+    ):
+        return "tablet"
     return "desktop"
 
 
