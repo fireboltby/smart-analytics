@@ -9,6 +9,7 @@
 {% block body %}
 <div class="container">
   {% set active = "dashboard" %}
+  {% set brand = site.name if site else "" %}
   {% include "_nav.html" %}
 
   {% if no_site %}

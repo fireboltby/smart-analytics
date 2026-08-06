@@ -1017,10 +1017,16 @@ nav .nav-group .site-switcher select option {
     gap: 0.75rem;
   }
   nav .nav-right { width: auto; }   /* 覆盖平板段的 100%，恢复右上簇 */
-  /* 保留 LOGO，仅在手机端隐藏文字站点名 */
-  nav .nav-brand { width: auto; }
-  nav .brand-name,
-  nav .brand-site { display: none; }
+  /* 保留 LOGO，仅隐藏产品名 smart-analytics；站点/页面名(brand-site)在手机端显示 */
+  nav .nav-brand { width: auto; min-width: 0; }
+  nav .brand-name { display: none; }
+  nav .brand-site {
+    display: inline-block;
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
 
   /* 顶栏操作簇：换肤键 + 汉堡菜单靠右排列 */
   nav .nav-top {
