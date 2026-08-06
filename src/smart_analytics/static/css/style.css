@@ -262,15 +262,36 @@ nav .logout-link:hover {
   margin-bottom: 1.5rem;
 }
 
+/* Tablet & phone: 2 columns. Phones keep a 2-up grid (NOT a 1-col stack)
+   so all 8 KPI cards fit in ~4 compact rows instead of a full-screen scroll. */
 @media (max-width: 900px) {
   .stats {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 520px) {
+/* Phone: keep 2 columns, tighten spacing & type for small screens.
+   min-width:0 lets the grid track shrink so long numbers can't force
+   a horizontal scrollbar. */
+@media (max-width: 560px) {
   .stats {
-    grid-template-columns: 1fr;
+    gap: 0.55rem;
+  }
+  .stat {
+    padding: 0.7rem 0.75rem;
+    min-width: 0;
+  }
+  .stat h3 {
+    font-size: 0.62rem;
+    letter-spacing: 0.02em;
+  }
+  .stat .num {
+    font-size: 1.35rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .delta {
+    font-size: 0.72rem;
+    padding: 0.02rem 0.3rem;
   }
 }
 
