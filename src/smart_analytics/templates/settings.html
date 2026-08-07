@@ -56,6 +56,7 @@
   {% set brand = "设置" %}
   {% include "_nav.html" %}
 
+  <main class="page-main">
   <div class="settings-card">
     <h3>修改登录密码</h3>
     {% if env_fixed %}
@@ -93,6 +94,7 @@
     </form>
   </div>
   {% endif %}
+  </main>
 </div>
 {% endblock %}
 

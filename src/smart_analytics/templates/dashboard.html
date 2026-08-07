@@ -12,6 +12,7 @@
   {% set brand = site.name if site else "" %}
   {% include "_nav.html" %}
 
+  <main class="page-main">
   {% if no_site %}
   <div class="empty-panel">
     <h2>你还没有任何站点</h2>
@@ -44,7 +45,7 @@
     </div>
   </div>
 
-  <div class="stats">
+  <div class="stats" id="sec-overview">
     <div class="stat">
       <h3>独立访客</h3>
       <div class="num">{{ "{:,}".format(total_uniques) }}
@@ -86,11 +87,11 @@
   </div>
 
   <div class="charts">
-    <div class="chart-card wide">
+    <div class="chart-card wide" id="sec-trend">
       <h3>访问趋势</h3>
       <div id="traffic-chart" class="chart tall"></div>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" id="sec-geo">
       <h3>国家分布</h3>
       <div id="geo-chart" class="chart"></div>
     </div>
@@ -102,7 +103,7 @@
       <h3>城市分布</h3>
       <div id="city-chart" class="chart"></div>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" id="sec-device">
       <h3>设备分布</h3>
       <div id="device-chart" class="chart"></div>
     </div>
@@ -110,7 +111,7 @@
       <h3>新/老访客</h3>
       <div id="visitor-chart" class="chart"></div>
     </div>
-    <div class="chart-card">
+    <div class="chart-card" id="sec-time">
       <h3>星期分布</h3>
       <div id="weekday-chart" class="chart"></div>
     </div>
@@ -121,7 +122,7 @@
   </div>
 
   <div class="insights">
-    <div class="insight-card">
+    <div class="insight-card table-card" id="sec-toppages">
       <h3>热门页面</h3>
       <table class="data-table">
         <thead>
@@ -159,7 +160,7 @@
       <p class="empty">暂无数据</p>
       {% endif %}
     </div>
-    <div class="insight-card">
+    <div class="insight-card" id="sec-traffic">
       <h3>流量来源</h3>
       {% if top_referrers %}
       <ul class="rank-list">
@@ -214,7 +215,7 @@
       <p class="empty">暂无 UTM 活动</p>
       {% endif %}
     </div>
-    <div class="insight-card full">
+    <div class="insight-card full" id="sec-session">
       <h3>会话落地页 <span class="badge est">估算</span></h3>
       <div class="two-col">
         <div>
@@ -274,7 +275,7 @@
     </div>
   </div>
 
-  <div class="snippet">
+  <div class="snippet" id="sec-snippet">
     <h3>在「{{ site.name }}」中嵌入统计代码</h3>
     <div class="snippet-box">
       <div class="snippet-code" id="snippet-text">&lt;script src="{{ origin }}/s/{{ site.token }}.js" defer&gt;&lt;/script&gt;</div>
@@ -283,13 +284,26 @@
     <p class="snippet-hint">该脚本仅统计「{{ site.name }}」的数据，token 随机生成不可枚举。</p>
   </div>
 
+  <nav class="dot-nav" aria-label="区块导航">
+    <a href="#sec-overview" data-label="数据概览" aria-label="数据概览"></a>
+    <a href="#sec-trend" data-label="访问趋势" aria-label="访问趋势"></a>
+    <a href="#sec-geo" data-label="地理分布" aria-label="地理分布"></a>
+    <a href="#sec-device" data-label="设备分布" aria-label="设备分布"></a>
+    <a href="#sec-time" data-label="时间规律" aria-label="时间规律"></a>
+    <a href="#sec-toppages" data-label="热门页面" aria-label="热门页面"></a>
+    <a href="#sec-traffic" data-label="来源分析" aria-label="来源分析"></a>
+    <a href="#sec-session" data-label="会话与终端" aria-label="会话与终端"></a>
+    <a href="#sec-snippet" data-label="嵌入代码" aria-label="嵌入代码"></a>
+  </nav>
+
   {% endif %}
+  </main>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {% if not no_site %}
-<script src="/static/js/dashboard.js?v=4"></script>
+<script src="/static/js/dashboard.js?v=5"></script>
 <script>
   initCharts({{ chart_data | tojson }});
 </script>

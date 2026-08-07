@@ -17,11 +17,13 @@
       }
     })();
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=31">
+  <link rel="stylesheet" href="/static/css/style.css?v=43">
   {% block head %}{% endblock %}
 </head>
 <body>
-  {% block body %}{% endblock %}
+  <div class="page-shell">
+    {% block body %}{% endblock %}
+  </div>
   {% block scripts %}{% endblock %}
   <script>
     // 主题切换：胶囊滑块开关，localStorage 持久化，跨页与多标签页同步

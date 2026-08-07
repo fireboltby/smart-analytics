@@ -323,3 +323,65 @@ function startRealtime() {
   setInterval(tick, 10000);
 }
 startRealtime();
+
+// ===== 右侧区块锚点导航（scrollspy + 平滑滚动） =====
+(function () {
+  const nav = document.querySelector('.dot-nav');
+  if (!nav) return;
+  const links = Array.from(nav.querySelectorAll('a'));
+  const scroller = document.querySelector('.page-main'); // 实际滚动容器（overflow-y:auto）
+  if (!links.length || !scroller) return;
+
+  const sections = links
+    .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+    .filter(Boolean);
+  if (!sections.length) return;
+
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 点击：在滚动容器内平滑滚动到对应区块
+  links.forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      target.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      setActive(id); // 立即高亮，滚动过程中不闪动
+    });
+  });
+
+  function setActive(id) {
+    links.forEach(a => {
+      const on = a.getAttribute('href') === '#' + id;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
+  }
+
+  // scrollspy：根据区块在滚动容器内的位置高亮当前圆点
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      const pmTop = scroller.getBoundingClientRect().top;
+      let currentId = sections[0].id;
+      for (const s of sections) {
+        const top = s.getBoundingClientRect().top - pmTop;
+        if (top <= 120) currentId = s.id; // 区块顶部进入视口上方阈值内
+      }
+      // 滚到底部时强制高亮最后一个（嵌入代码）
+      if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 4) {
+        currentId = sections[sections.length - 1].id;
+      }
+      setActive(currentId);
+      ticking = false;
+    });
+  }
+
+  scroller.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  onScroll(); // 初始高亮
+})();

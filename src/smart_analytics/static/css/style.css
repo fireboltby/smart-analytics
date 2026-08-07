@@ -9,6 +9,9 @@
   --green: #3fb950;
   --red: #f85149;
   --orange: #d29922;
+  --scroll-thumb: rgba(201, 209, 217, 0.22);      /* 滚动条滑块（深色） */
+  --scroll-thumb-hover: rgba(201, 209, 217, 0.42);
+  --accent-soft: rgba(88, 166, 255, 0.22);        /* accent 光晕（深色） */
 }
 
 /* 浅色主题：覆盖全部 CSS 变量（普通模式） */
@@ -22,19 +25,96 @@
   --green: #1a7f37;
   --red: #cf222e;
   --orange: #9a6700;
+  --scroll-thumb: rgba(31, 35, 40, 0.2);          /* 滚动条滑块（浅色） */
+  --scroll-thumb-hover: rgba(31, 35, 40, 0.4);
+  --accent-soft: rgba(9, 105, 218, 0.18);         /* accent 光晕（浅色） */
 }
 
 * {
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   font-family: system-ui, -apple-system, sans-serif;
   margin: 0;
-  padding: 1.5rem;
+  padding: 0;
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+}
+
+.page-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;          /* 整体外留白：nav 与主体共享，避免在 page-main 内加 padding 吃掉主体宽度 */
+}
+
+.page-shell > .container,
+.page-shell > .container.wide {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-self: center;        /* 交叉轴(横向)居中，宽度由 max-width 限制，与最初 body 居中一致 */
+}
+
+.page-main {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;            /* 水平留白由外层 .page-shell 提供，此处不再加 padding，主体宽度与最初一致 */
+}
+
+/* ===== 滚动条：PC 端隐藏（滚轮/触控板仍可滚动）；窄屏保留贴合主题的细条 ===== */
+.page-main,
+.controls,
+nav .links,
+.insight-card.table-card {
+  scrollbar-width: none;                          /* Firefox：直接隐藏 */
+}
+.page-main::-webkit-scrollbar,
+.controls::-webkit-scrollbar,
+nav .links::-webkit-scrollbar,
+.insight-card.table-card::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                                 /* WebKit：不渲染滚动条 */
+}
+
+/* 窄屏（触控滚动）显示细半透明滚动条，避免内容溢出无指示 */
+@media (max-width: 560px) {
+  .page-main,
+  .insight-card.table-card {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
+  .page-main::-webkit-scrollbar,
+  .insight-card.table-card::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .page-main::-webkit-scrollbar-track,
+  .insight-card.table-card::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .page-main::-webkit-scrollbar-thumb,
+  .insight-card.table-card::-webkit-scrollbar-thumb {
+    background-color: var(--scroll-thumb);
+    border-radius: 999px;
+    border: 2px solid transparent;                /* 四周留白，细条悬浮感 */
+    background-clip: padding-box;
+  }
+  .page-main::-webkit-scrollbar-thumb:hover,
+  .insight-card.table-card::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scroll-thumb-hover);  /* 悬停加深 */
+  }
 }
 
 .container {
@@ -53,7 +133,9 @@ nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;     /* 与主体间距（水平留白由 .page-shell 提供，不再在 nav 内加 padding） */
+  flex: 0 0 auto;
+  background: var(--bg);     /* 与网页背景同色 */
 }
 
 /* 品牌区：LOGO（📈）与站点名分离，便于移动端只保留图标 */
@@ -246,85 +328,68 @@ nav .logout-link:hover {
   color: #fff;
 }
 
-/* Controls */
+/* Controls：时间范围 / 统计间隔 采用与移动端一致的胶囊芯片 */
 .controls {
   display: flex;
-  gap: 1.5rem;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
+  flex-direction: column;
+  gap: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
-.control-row {
+.control-group {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-  white-space: nowrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
 }
 
 .control-group .cg-title {
-  display: inline-flex;
-  align-items: center;
-  padding: 0 0.85rem;
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   white-space: nowrap;
   user-select: none;
-  border-right: 1px solid var(--border);
 }
 
-/* 第二个及以后的标题（如「统计间隔」）左侧也加分隔线，区分不同维度 */
-.control-group .cg-title ~ .cg-title {
-  border-left: 1px solid var(--border);
-}
-
-/* 时间范围 / 统计间隔：分段胶囊，与导航菜单组同款（高度对齐 40px） */
-.control-group {
-  display: inline-flex;
-  align-items: stretch;
-  min-height: 32px;
-  box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--card);
-  overflow: hidden;
+.control-group .cg-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
 }
 
 .control-group a {
   display: inline-flex;
   align-items: center;
-  padding: 0 0.5rem;
+  justify-content: center;
+  padding: 0.4rem 0.85rem;
+  min-height: 38px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
   color: var(--text);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-.control-group a + a {
-  border-left: 1px solid var(--border);
-}
-
-.control-group a:hover {
-  background: var(--accent);
-  color: #fff;
+.control-group a:hover,
+.control-group a:focus-visible {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .control-group a.active {
   background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
 }
 
-.control-group a.active:hover {
+.control-group a.active:hover,
+.control-group a.active:focus-visible {
   filter: brightness(0.95);
-}
-
-/* 移动端把选项拆成独立换行容器；桌面端用 display:contents 还原为单一胶囊 */
-.control-group .cg-options {
-  display: contents;
 }
 
 /* Stats grid */
@@ -1064,13 +1129,15 @@ nav .nav-group .site-switcher select option {
 
 /* ---- 手机（≤560px）：导航纵向堆叠、控件分节竖排 ---- */
 @media (max-width: 560px) {
-  body { padding: 1rem; }
+  /* 移动端整体外留白收紧到 1rem（与最初 body padding 一致），nav 与主体对齐 */
+  .page-shell { padding: 1rem; }
+  .page-main { padding: 0; }
 
   /* ===== 顶部导航：LOGO 居左，换肤键 + 菜单图标居右（浮层抽屉，不挤占正文） ===== */
   nav {
-    position: relative;
     flex-wrap: nowrap;
     gap: 0.75rem;
+    padding: 0;              /* 水平留白由 .page-shell(1rem) 提供，避免与主体不对齐 */
   }
   nav .nav-right { width: auto; }   /* 覆盖平板段的 100%，恢复右上簇 */
   /* 保留 LOGO，仅隐藏产品名 smart-analytics；移动端站点名改为可点击切换按钮 */
@@ -1224,54 +1291,7 @@ nav .nav-group .site-switcher select option {
   .chart { height: 180px; }
   .chart.tall { height: 220px; }
 
-  /* ===== 控件：标题 + 可换行胶囊芯片，不再简单竖排 ===== */
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.9rem;
-    margin-bottom: 1.25rem;
-  }
-  .control-group {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    border: none;
-    background: transparent;
-    border-radius: 0;
-    overflow: visible;
-  }
-  .control-group .cg-title {
-    width: auto;
-    justify-content: flex-start;
-    border: none;
-    padding: 0 0.1rem 0.4rem;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-  }
-  .control-group .cg-title ~ .cg-title { border: none; }
-  .control-group .cg-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-  .control-group a {
-    width: auto;
-    flex: 0 0 auto;
-    justify-content: center;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    padding: 0.4rem 0.85rem;
-    min-height: 38px;
-    background: var(--card);
-  }
-  .control-group a + a { border-left: 1px solid var(--border); }
-  .control-group a.active {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
+  /* 控件默认已是芯片样式，移动端无需覆盖 */
 }
 
 /* ---- 日志表格卡片化（≤640px 每行转卡片） ---- */
@@ -1314,4 +1334,121 @@ nav .nav-group .site-switcher select option {
     text-align: center;
   }
   td[colspan]::before { content: none; }
+
+  /* 热门页面：移动端保持表格形式（横向滚动），不卡片化 */
+  .insight-card.table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .data-table {
+    display: table;
+    width: auto;
+    min-width: 100%;
+  }
+  .data-table thead { display: table-header-group; }
+  .data-table tbody { display: table-row-group; }
+  .data-table tr {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+  }
+  .data-table td {
+    display: table-cell;
+    text-align: left;
+    justify-content: initial;
+    align-items: initial;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .data-table td:last-child { border-bottom: 1px solid var(--border); }
+  .data-table td::before { content: none; }   /* 保留真实表头，去掉卡片标签 */
+  .data-table .url-cell { max-width: 42vw; }   /* 移动端收敛长 URL，避免过度横向溢出 */
+}
+
+/* ===== 右侧区块锚点导航（竖线 + 圆点，scrollspy） ===== */
+/* 默认隐藏；仅宽屏（有右侧留白可容纳圆点）显示，避免遮挡窄屏内容 */
+.dot-nav { display: none; }
+
+@media (min-width: 1280px) {
+  .dot-nav {
+    display: flex;
+    position: fixed;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 90;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.05rem;
+    padding: 0.6rem 0;
+  }
+  /* 贯穿的细竖线，首尾融入背景、避免硬边 */
+  .dot-nav::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      var(--bg) 0,
+      var(--border) 12%,
+      var(--border) 88%,
+      var(--bg) 100%
+    );
+    transform: translateX(-50%);
+    border-radius: 2px;
+  }
+  .dot-nav a {
+    position: relative;            /* 盖在竖线之上形成“线穿圆点” */
+    width: 11px;
+    height: 11px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--bg);         /* 同背景填充，竖线在中心被“截”成穿珠效果 */
+    border: 2px solid var(--border);
+    transition: transform .2s ease, border-color .2s ease, background-color .2s ease;
+    outline-offset: 3px;
+  }
+  .dot-nav a:hover,
+  .dot-nav a:focus-visible {
+    border-color: var(--accent);
+    transform: scale(1.35);
+  }
+  .dot-nav a.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.35);
+    box-shadow: 0 0 0 4px var(--accent-soft);   /* 柔光环 */
+  }
+  /* 悬停气泡提示（出现在圆点左侧） */
+  .dot-nav a::after {
+    content: attr(data-label);
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%) translateX(6px);
+    white-space: nowrap;
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 0.28rem 0.6rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1.2;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+  }
+  .dot-nav a:hover::after,
+  .dot-nav a:focus-visible::after {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }

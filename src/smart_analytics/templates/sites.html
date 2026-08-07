@@ -8,6 +8,7 @@
   {% set brand = "站点管理" %}
   {% include "_nav.html" %}
 
+  <main class="page-main">
   <div class="sites-create">
     <h3>新建站点</h3>
     <form method="post" action="/sites/create" class="site-form">
@@ -52,6 +53,7 @@
   {% else %}
   <p class="empty">还没有站点，先在上方创建一个吧。</p>
   {% endif %}
+  </main>
 </div>
 {% endblock %}
 
