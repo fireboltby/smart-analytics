@@ -231,6 +231,46 @@ def bucket_timestamp(ts_str: str, interval: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# 访问排除（展示层过滤：数据照常入库，仅统计/展示时排除）
+# ---------------------------------------------------------------------------
+
+def exclusion_clause(excl: "dict | None") -> str:
+    """生成 pageviews 统计查询的排除片段（不含前缀 AND）。
+
+    语义：被排除的访问**已入库**（保留记录），仅在统计/展示时过滤掉。
+    excl 结构：{enabled:bool, file:bool, localhost:bool, loopback:bool, custom:[str]}。
+    返回空串表示不排除。
+    """
+    if not excl or not excl.get("enabled"):
+        return ""
+    parts: list[str] = []
+    if excl.get("file"):
+        parts.append("LOWER(url) NOT LIKE 'file://%'")
+    if excl.get("localhost"):
+        parts.append(
+            "LOWER(url) NOT LIKE 'http://localhost%' "
+            "AND LOWER(url) NOT LIKE 'https://localhost%'"
+        )
+    if excl.get("loopback"):
+        parts.append(
+            "LOWER(url) NOT LIKE 'http://127.0.0.1%' AND LOWER(url) NOT LIKE 'https://127.0.0.1%' "
+            "AND LOWER(url) NOT LIKE 'http://0.0.0.0%' AND LOWER(url) NOT LIKE 'https://0.0.0.0%' "
+            "AND LOWER(url) NOT LIKE 'http://[::1]%' AND LOWER(url) NOT LIKE 'https://[::1]%'"
+        )
+    for c in (excl.get("custom") or []):
+        c = str(c).strip().lower().replace("'", "''")
+        if not c:
+            continue
+        parts.append(
+            f"LOWER(url) NOT LIKE 'http://{c}%' AND LOWER(url) NOT LIKE 'https://{c}%' "
+            f"AND LOWER(url) NOT LIKE 'http://%.{c}%' AND LOWER(url) NOT LIKE 'https://%.{c}%'"
+        )
+    if not parts:
+        return ""
+    return " AND ".join(parts)
+
+
+# ---------------------------------------------------------------------------
 # 展示用映射
 # ---------------------------------------------------------------------------
 
@@ -253,7 +293,7 @@ SEARCH_ENGINES = ("google", "baidu", "bing", "yahoo", "yandex",
 # 仪表盘计算（强制 site_id 隔离）
 # ---------------------------------------------------------------------------
 
-def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
+def compute_dashboard(conn, site_id: int, hours: int, interval: str, excl: "dict | None" = None) -> dict:
     """Compute all dashboard metrics for a single site within [now-hours, now].
 
     所有 SQL 均带 `site_id = ?` 过滤——这是多站点隔离的唯一出口，
@@ -262,16 +302,20 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     if interval not in ("1m", "5m", "15m", "1h", "1d"):
         interval = "1h"
 
+    # 展示层排除：被排除访问已入库，仅在统计时过滤
+    cl = exclusion_clause(excl)
+    excl_sql = (" AND " + cl) if cl else ""
+
     now = datetime.now(BEIJING)
     since = (now - timedelta(hours=hours)).isoformat()
 
     # 聚合统计
-    stats = conn.execute("""
+    stats = conn.execute(f"""
         SELECT
             COUNT(DISTINCT visitor_hash) as uniques,
             COUNT(*) as views,
             AVG(CASE WHEN duration_sec IS NOT NULL AND duration_sec > 0 THEN duration_sec END) as avg_duration
-        FROM pageviews WHERE site_id = ? AND ts >= ?
+        FROM pageviews WHERE site_id = ? AND ts >= ?{excl_sql}
     """, (site_id, since)).fetchone()
 
     total_uniques = stats["uniques"]
@@ -280,12 +324,12 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
 
     # 环比：上一等长周期 [since*2, since)
     prev_since = (now - timedelta(hours=hours * 2)).isoformat()
-    prev_stats = conn.execute("""
+    prev_stats = conn.execute(f"""
         SELECT
             COUNT(DISTINCT visitor_hash) as uniques,
             COUNT(*) as views,
             AVG(CASE WHEN duration_sec IS NOT NULL AND duration_sec > 0 THEN duration_sec END) as avg_duration
-        FROM pageviews WHERE site_id = ? AND ts >= ? AND ts < ?
+        FROM pageviews WHERE site_id = ? AND ts >= ?{excl_sql} AND ts < ?
     """, (site_id, prev_since, since)).fetchone()
     prev_uniques = prev_stats["uniques"]
     prev_views = prev_stats["views"]
@@ -303,19 +347,19 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     # 实时在线（近 5 分钟去重访客）
     online_since = (now - timedelta(minutes=5)).isoformat()
     online_now = conn.execute(
-        "SELECT COUNT(DISTINCT visitor_hash) FROM pageviews WHERE site_id = ? AND ts >= ?",
+        f"SELECT COUNT(DISTINCT visitor_hash) FROM pageviews WHERE site_id = ? AND ts >= ?{excl_sql}",
         (site_id, online_since),
     ).fetchone()[0]
 
     # 新/老访客：以 visitor_hash 在该站的首访时间是否在当前窗口内判定
-    nr = conn.execute("""
+    nr = conn.execute(f"""
         SELECT
             SUM(CASE WHEN first_seen >= ? THEN 1 ELSE 0 END) AS new_v,
             SUM(CASE WHEN first_seen < ? THEN 1 ELSE 0 END) AS ret_v
         FROM (
             SELECT visitor_hash, MIN(ts) AS first_seen
             FROM pageviews
-            WHERE site_id = ?
+            WHERE site_id = ?{excl_sql}
             GROUP BY visitor_hash
             HAVING MAX(ts) >= ?
         )
@@ -324,16 +368,16 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
     returning_visitors = nr["ret_v"] or 0
 
     # 拉取窗口内明细行，单次遍历完成所有拆解
-    rows = conn.execute("""
+    rows = conn.execute(f"""
         SELECT ts, url, referrer, visitor_hash, user_agent, country, region, city, device, duration_sec, ip
-        FROM pageviews WHERE site_id = ? AND ts >= ?
+        FROM pageviews WHERE site_id = ? AND ts >= ?{excl_sql}
     """, (site_id, since)).fetchall()
 
     # 会话重建——向前多取一个超时窗口，减少跨边界会话被截断
     session_since = (now - timedelta(hours=hours, seconds=SESSION_TIMEOUT)).isoformat()
-    session_rows = conn.execute("""
+    session_rows = conn.execute(f"""
         SELECT ts, url, visitor_hash, duration_sec
-        FROM pageviews WHERE site_id = ? AND ts >= ?
+        FROM pageviews WHERE site_id = ? AND ts >= ?{excl_sql}
     """, (site_id, session_since)).fetchall()
 
     # 累加器
@@ -583,14 +627,16 @@ def compute_dashboard(conn, site_id: int, hours: int, interval: str) -> dict:
 # 访问日志（强制 site_id 隔离）
 # ---------------------------------------------------------------------------
 
-def get_logs(conn, site_id: int, limit: int, offset: int, filter_type: str = "all"):
-    """返回 (processed_rows, total)，均限定 site_id。"""
+def get_logs(conn, site_id: int, limit: int, offset: int, filter_type: str = "all", excl: "dict | None" = None):
+    """返回 (processed_rows, total)，均限定 site_id；excl 非空时排除指定访问。"""
+    cl = exclusion_clause(excl)
+    excl_sql = (" AND " + cl) if cl else ""
     total = conn.execute(
-        "SELECT COUNT(*) as cnt FROM pageviews WHERE site_id = ?", (site_id,)
+        f"SELECT COUNT(*) as cnt FROM pageviews WHERE site_id = ?{excl_sql}", (site_id,)
     ).fetchone()["cnt"]
-    rows = conn.execute("""
+    rows = conn.execute(f"""
         SELECT id, ts, url, referrer, visitor_hash, user_agent, country, region, city, device, duration_sec, ip
-        FROM pageviews WHERE site_id = ? ORDER BY ts DESC LIMIT ? OFFSET ?
+        FROM pageviews WHERE site_id = ?{excl_sql} ORDER BY ts DESC LIMIT ? OFFSET ?
     """, (site_id, limit, offset)).fetchall()
 
     processed_rows = []

@@ -32,6 +32,7 @@ from smart_analytics.analytics import (
     get_location,
     compute_dashboard,
     get_logs,
+    exclusion_clause,
 )
 
 # ---------------------------------------------------------------------------
@@ -292,7 +293,9 @@ def _rate_ok(key: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# 访问过滤（本地/开发环境）—— 全局配置，避免本地调试污染统计
+# 访问过滤（本地/开发环境）—— 全局配置
+# 语义：被排除的访问**照常入库**（保留记录），仅在统计/展示时过滤。
+# 过滤逻辑在 analytics.exclusion_clause() 中统一注入各查询。
 # ---------------------------------------------------------------------------
 
 _EXCLUSIONS_CACHE: dict = {"value": None, "ts": 0}
@@ -329,33 +332,6 @@ def get_exclusions() -> dict:
     cache["value"] = default
     cache["ts"] = now
     return default
-
-
-def _url_excluded(url: str, excl: dict) -> bool:
-    """判断某个被采集的页面 URL 是否应被排除（不计入统计）。"""
-    if not excl.get("enabled"):
-        return False
-    if not url:
-        return False
-    try:
-        p = urlparse(url)
-    except Exception:
-        return False
-    scheme = (p.scheme or "").lower()
-    host = (p.hostname or "").lower()
-    if excl.get("file") and scheme == "file":
-        return True
-    if excl.get("localhost") and host == "localhost":
-        return True
-    if excl.get("loopback") and host in ("127.0.0.1", "0.0.0.0", "::1"):
-        return True
-    for c in (excl.get("custom") or []):
-        c = str(c).strip().lower()
-        if not c:
-            continue
-        if host == c or host.endswith("." + c):
-            return True
-    return False
 
 
 # ---------------------------------------------------------------------------
@@ -611,10 +587,6 @@ async def track(hit: Hit, request: Request):
         if request_origin and request_origin not in hosts:
             return Response(status_code=204)
 
-    # 本地/开发访问过滤（全局配置，静默丢弃不计入统计）
-    if _url_excluded(hit.url, get_exclusions()):
-        return Response(status_code=204)
-
     if not _rate_ok(token):
         return Response(status_code=204)
 
@@ -695,22 +667,8 @@ async def snippet(request: Request, token: str):
     if not row:
         return Response(status_code=404, media_type="application/javascript")
     origin = f"{request.url.scheme}://{request.url.netloc}"
-    excl_json = json.dumps(get_exclusions(), ensure_ascii=False).replace("<", "\\u003c")
     js = f"""\
 (function(){{
-  var EX = {excl_json};
-  function _excluded(){{
-    if(!EX.enabled) return false;
-    try{{
-      var p=new URL(location.href); var h=p.hostname.toLowerCase();
-      if(EX.file && p.protocol==='file:') return true;
-      if(EX.localhost && h==='localhost') return true;
-      if(EX.loopback && (h==='127.0.0.1'||h==='0.0.0.0'||h==='::1')) return true;
-      for(var i=0;i<(EX.custom||[]).length;i++){{var c=EX.custom[i].toLowerCase();if(h===c||h.endsWith('.'+c))return true;}}
-    }}catch(e){{}}
-    return false;
-  }}
-  if(_excluded()) return;
   var start=Date.now(),rid=null;
   fetch("{origin}/t?t={token}",{{
     method:"POST",
@@ -812,7 +770,7 @@ async def dashboard(request: Request, hours: int = 24, interval: str = "1h",
 
     conn = get_db()
     try:
-        data = compute_dashboard(conn, site["id"], hours, interval)
+        data = compute_dashboard(conn, site["id"], hours, interval, get_exclusions())
     finally:
         conn.close()
 
@@ -837,10 +795,12 @@ async def api_realtime(request: Request, site: int = 0, user_id: int | None = De
     if not site:
         return {"online": 0}
     since = (datetime.now(BEIJING) - timedelta(minutes=5)).isoformat()
+    cl = exclusion_clause(get_exclusions())
+    excl_sql = (" AND " + cl) if cl else ""
     conn = get_db()
     try:
         online = conn.execute(
-            "SELECT COUNT(DISTINCT visitor_hash) FROM pageviews WHERE site_id=? AND ts>=?",
+            f"SELECT COUNT(DISTINCT visitor_hash) FROM pageviews WHERE site_id=? AND ts>=?{excl_sql}",
             (site, since),
         ).fetchone()[0]
     finally:
@@ -864,7 +824,7 @@ async def logs_page(request: Request, limit: int = 100, offset: int = 0,
         )
     conn = get_db()
     try:
-        rows, total = get_logs(conn, site["id"], limit, offset, filter)
+        rows, total = get_logs(conn, site["id"], limit, offset, filter, get_exclusions())
     finally:
         conn.close()
     return templates.TemplateResponse(request, "logs.html", {
