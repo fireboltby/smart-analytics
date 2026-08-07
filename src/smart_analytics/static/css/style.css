@@ -1303,6 +1303,55 @@ nav .nav-group .site-switcher select option {
   .chart { height: 180px; }
   .chart.tall { height: 220px; }
 
+  /* ===== 控件：PC 是分段胶囊，窄屏一行塞不下 → 移动端允许换行（每行折行） =====
+     标题在上（小号大写），下方一排独立圆角药丸，选项自动折行到多行，不再横滚 */
+  .controls {
+    flex-wrap: wrap;          /* 两组控件可上下堆叠 */
+    overflow-x: visible;      /* 取消横向滚动 */
+    gap: 1rem;
+  }
+  .control-group {
+    flex-direction: column;   /* 标题与选项纵向排列 */
+    align-items: flex-start;
+    width: 100%;
+    min-height: 0;
+    border: none;             /* 去掉整组胶囊外框 */
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;        /* 不裁剪折行后的选项 */
+  }
+  .control-group .cg-title {
+    width: auto;
+    border: none;             /* 去掉组内右侧分隔线 */
+    padding: 0 0.1rem 0.4rem;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .control-group .cg-options {
+    display: flex;
+    flex-wrap: wrap;          /* 选项不足一行时折行 */
+    gap: 0.4rem;
+  }
+  .control-group a {
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: 999px;     /* 独立胶囊 */
+    padding: 0.4rem 0.85rem;
+    min-height: 38px;         /* 触摸目标达标 */
+    background: var(--card);
+  }
+  .control-group a + a {
+    border-left: 1px solid var(--border);  /* 折行后各药丸自带边框，分隔线同源无重影 */
+  }
+  .control-group a.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
 }
 
 /* ---- 日志表格卡片化（≤640px 每行转卡片） ---- */
