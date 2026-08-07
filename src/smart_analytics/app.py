@@ -9,6 +9,7 @@ import hashlib
 import json
 import os
 import secrets
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -291,6 +292,73 @@ def _rate_ok(key: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# 访问过滤（本地/开发环境）—— 全局配置，避免本地调试污染统计
+# ---------------------------------------------------------------------------
+
+_EXCLUSIONS_CACHE: dict = {"value": None, "ts": 0}
+_EXCLUSIONS_TTL = 30.0
+
+
+def get_exclusions() -> dict:
+    """读取全局访问过滤配置（带 30s 内存缓存）。"""
+    now = time.time()
+    cache = _EXCLUSIONS_CACHE
+    if cache["value"] is not None and (now - cache["ts"]) < _EXCLUSIONS_TTL:
+        return cache["value"]
+    default = {"enabled": True, "file": True, "localhost": True,
+               "loopback": True, "custom": []}
+    try:
+        conn = get_db()
+        try:
+            row = conn.execute(
+                "SELECT value FROM app_settings WHERE key='tracking_exclusions'"
+            ).fetchone()
+        finally:
+            conn.close()
+        if row and row["value"]:
+            data = json.loads(row["value"])
+            merged = dict(default)
+            merged.update(data)
+            if not isinstance(merged.get("custom"), list):
+                merged["custom"] = []
+            cache["value"] = merged
+            cache["ts"] = now
+            return merged
+    except Exception:
+        pass
+    cache["value"] = default
+    cache["ts"] = now
+    return default
+
+
+def _url_excluded(url: str, excl: dict) -> bool:
+    """判断某个被采集的页面 URL 是否应被排除（不计入统计）。"""
+    if not excl.get("enabled"):
+        return False
+    if not url:
+        return False
+    try:
+        p = urlparse(url)
+    except Exception:
+        return False
+    scheme = (p.scheme or "").lower()
+    host = (p.hostname or "").lower()
+    if excl.get("file") and scheme == "file":
+        return True
+    if excl.get("localhost") and host == "localhost":
+        return True
+    if excl.get("loopback") and host in ("127.0.0.1", "0.0.0.0", "::1"):
+        return True
+    for c in (excl.get("custom") or []):
+        c = str(c).strip().lower()
+        if not c:
+            continue
+        if host == c or host.endswith("." + c):
+            return True
+    return False
+
+
+# ---------------------------------------------------------------------------
 # 请求模型
 # ---------------------------------------------------------------------------
 
@@ -298,6 +366,14 @@ class Hit(BaseModel):
     url: str
     referrer: str | None = None
     sid: str | None = None
+
+
+class ExclusionsIn(BaseModel):
+    enabled: bool = True
+    file: bool = True
+    localhost: bool = True
+    loopback: bool = True
+    custom: list[str] = []
 
 
 # ---------------------------------------------------------------------------
@@ -535,6 +611,10 @@ async def track(hit: Hit, request: Request):
         if request_origin and request_origin not in hosts:
             return Response(status_code=204)
 
+    # 本地/开发访问过滤（全局配置，静默丢弃不计入统计）
+    if _url_excluded(hit.url, get_exclusions()):
+        return Response(status_code=204)
+
     if not _rate_ok(token):
         return Response(status_code=204)
 
@@ -615,8 +695,22 @@ async def snippet(request: Request, token: str):
     if not row:
         return Response(status_code=404, media_type="application/javascript")
     origin = f"{request.url.scheme}://{request.url.netloc}"
+    excl_json = json.dumps(get_exclusions(), ensure_ascii=False).replace("<", "\\u003c")
     js = f"""\
 (function(){{
+  var EX = {excl_json};
+  function _excluded(){{
+    if(!EX.enabled) return false;
+    try{{
+      var p=new URL(location.href); var h=p.hostname.toLowerCase();
+      if(EX.file && p.protocol==='file:') return true;
+      if(EX.localhost && h==='localhost') return true;
+      if(EX.loopback && (h==='127.0.0.1'||h==='0.0.0.0'||h==='::1')) return true;
+      for(var i=0;i<(EX.custom||[]).length;i++){{var c=EX.custom[i].toLowerCase();if(h===c||h.endsWith('.'+c))return true;}}
+    }}catch(e){{}}
+    return false;
+  }}
+  if(_excluded()) return;
   var start=Date.now(),rid=null;
   fetch("{origin}/t?t={token}",{{
     method:"POST",
@@ -797,7 +891,8 @@ async def settings_page(request: Request, user_id: int = Depends(require_user)):
     site, sites = resolve_current_site(request, user_id)
     return templates.TemplateResponse(request, "settings.html",
                                      {"env_fixed": env_fixed, "is_admin": is_admin,
-                                      "site": site, "sites": sites})
+                                      "site": site, "sites": sites,
+                                      "excl": get_exclusions()})
 
 
 @app.post("/api/change-password")
@@ -824,6 +919,35 @@ async def change_password(
     finally:
         conn.close()
     return {"ok": True, "msg": "密码已更新，请使用新密码重新登录。", "logout": "/logout"}
+
+
+# ---------------------------------------------------------------------------
+# 访问过滤配置（仅管理员）
+# ---------------------------------------------------------------------------
+
+@app.post("/api/save-exclusions")
+async def save_exclusions(payload: ExclusionsIn, user_id: int = Depends(require_user)):
+    if not user_is_admin(user_id):
+        raise HTTPException(status_code=403, detail="仅管理员可配置访问过滤")
+    data = {
+        "enabled": bool(payload.enabled),
+        "file": bool(payload.file),
+        "localhost": bool(payload.localhost),
+        "loopback": bool(payload.loopback),
+        "custom": [str(c).strip().lower() for c in payload.custom if str(c).strip()],
+    }
+    conn = get_db()
+    try:
+        conn.execute(
+            "INSERT INTO app_settings(key, value) VALUES('tracking_exclusions', ?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (json.dumps(data),),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+    _EXCLUSIONS_CACHE["value"] = None  # 失效缓存，下次读取最新
+    return {"ok": True, "msg": "访问过滤设置已保存"}
 
 
 # ---------------------------------------------------------------------------

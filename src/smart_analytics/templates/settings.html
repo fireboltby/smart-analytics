@@ -93,6 +93,32 @@
       <button type="submit">创建账户</button>
     </form>
   </div>
+
+  <div class="settings-card">
+    <h3>访问过滤（本地/开发环境）</h3>
+    <p class="muted">全局生效，对所有站点有效。开启后，下列类型的访问将不计入统计（采集端静默丢弃，不写入数据库）。</p>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <input type="checkbox" id="ex_enabled" style="width:auto;" {% if excl.enabled %}checked{% endif %}>
+      启用访问过滤（不计入统计）
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:24px;">
+      <input type="checkbox" id="ex_file" style="width:auto;" {% if excl.file %}checked{% endif %}>
+      排除 <code>file://</code> 协议（本地文件直接打开）
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:24px;">
+      <input type="checkbox" id="ex_localhost" style="width:auto;" {% if excl.localhost %}checked{% endif %}>
+      排除 <code>localhost</code>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:24px;">
+      <input type="checkbox" id="ex_loopback" style="width:auto;" {% if excl.loopback %}checked{% endif %}>
+      排除回环地址 <code>127.0.0.1</code> / <code>::1</code>
+    </label>
+    <label>自定义需排除的主机 / 域名（逗号或换行分隔）
+      <textarea id="ex_custom" rows="3" style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);box-sizing:border-box;font-family:inherit;">{{ excl.custom | join(', ') }}</textarea>
+    </label>
+    <p class="msg" id="ex_msg"></p>
+    <button type="button" id="ex_save">保存过滤设置</button>
+  </div>
   {% endif %}
   </main>
 </div>
@@ -154,6 +180,37 @@
         }
       } catch (err) {
         cuMsg.className = 'msg err'; cuMsg.textContent = '请求失败，请重试';
+      }
+    });
+  }
+
+  const exSave = document.getElementById('ex_save');
+  const exMsg = document.getElementById('ex_msg');
+  if (exSave) {
+    exSave.addEventListener('click', async () => {
+      exMsg.className = 'msg'; exMsg.textContent = '';
+      const payload = {
+        enabled: document.getElementById('ex_enabled').checked,
+        file: document.getElementById('ex_file').checked,
+        localhost: document.getElementById('ex_localhost').checked,
+        loopback: document.getElementById('ex_loopback').checked,
+        custom: document.getElementById('ex_custom').value
+          .split(/[,\n]/).map(s => s.trim()).filter(Boolean)
+      };
+      try {
+        const resp = await fetch('/api/save-exclusions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          exMsg.className = 'msg ok'; exMsg.textContent = data.msg || '已保存';
+        } else {
+          exMsg.className = 'msg err'; exMsg.textContent = data.detail || '保存失败';
+        }
+      } catch (err) {
+        exMsg.className = 'msg err'; exMsg.textContent = '请求失败，请重试';
       }
     });
   }
