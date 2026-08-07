@@ -328,68 +328,85 @@ nav .logout-link:hover {
   color: #fff;
 }
 
-/* Controls：时间范围 / 统计间隔 采用与移动端一致的胶囊芯片 */
+/* Controls */
 .controls {
   display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
   margin-bottom: 1.5rem;
 }
 
-.control-group {
+.control-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.55rem;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .control-group .cg-title {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.85rem;
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   white-space: nowrap;
   user-select: none;
+  border-right: 1px solid var(--border);
 }
 
-.control-group .cg-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
+/* 第二个及以后的标题（如「统计间隔」）左侧也加分隔线，区分不同维度 */
+.control-group .cg-title ~ .cg-title {
+  border-left: 1px solid var(--border);
+}
+
+/* 时间范围 / 统计间隔：分段胶囊，与导航菜单组同款（高度对齐 40px） */
+.control-group {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  overflow: hidden;
 }
 
 .control-group a {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.4rem 0.85rem;
-  min-height: 38px;
-  box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--card);
+  padding: 0 0.5rem;
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.control-group a:hover,
-.control-group a:focus-visible {
-  border-color: var(--accent);
-  color: var(--accent);
+.control-group a + a {
+  border-left: 1px solid var(--border);
+}
+
+.control-group a:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 .control-group a.active {
   background: var(--accent);
-  border-color: var(--accent);
   color: #fff;
 }
 
-.control-group a.active:hover,
-.control-group a.active:focus-visible {
+.control-group a.active:hover {
   filter: brightness(0.95);
+}
+
+/* 移动端把选项拆成独立换行容器；桌面端用 display:contents 还原为单一胶囊 */
+.control-group .cg-options {
+  display: contents;
 }
 
 /* Stats grid */
@@ -1120,11 +1137,6 @@ nav .nav-group .site-switcher select option {
   nav .nav-actions {
     flex: 1 1 auto;
   }
-  /* 控件由长横滚改为允许换行，窄屏更易读 */
-  .controls {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
 }
 
 /* ---- 手机（≤560px）：导航纵向堆叠、控件分节竖排 ---- */
@@ -1291,7 +1303,6 @@ nav .nav-group .site-switcher select option {
   .chart { height: 180px; }
   .chart.tall { height: 220px; }
 
-  /* 控件默认已是芯片样式，移动端无需覆盖 */
 }
 
 /* ---- 日志表格卡片化（≤640px 每行转卡片） ---- */
