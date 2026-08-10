@@ -47,6 +47,39 @@
   .msg.err { color: var(--red); }
   .notice { color: var(--orange); line-height: 1.6; }
   code { background: var(--bg); padding: 2px 6px; border-radius: 4px; }
+
+  /* 页签 */
+  .tabs {
+    max-width: 480px;
+    margin: 24px auto 0;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+  }
+  .tab {
+    flex: 1 0 auto;
+    min-width: 84px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  /* 页签激活时卡片顶部间距收紧 */
+  .tab-panel.active > .settings-card { margin-top: 12px; }
 </style>
 {% endblock %}
 
@@ -57,6 +90,15 @@
   {% include "_nav.html" %}
 
   <main class="page-main">
+  <div class="tabs" role="tablist" aria-label="设置分类">
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="panel-account" data-tab="account">账户</button>
+    {% if is_admin %}
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-users" data-tab="users">用户管理</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="panel-tracking" data-tab="tracking">统计设置</button>
+    {% endif %}
+  </div>
+
+  <div class="tab-panel active" id="panel-account" role="tabpanel" data-panel="account">
   <div class="settings-card">
     <h3>修改登录密码</h3>
     {% if env_fixed %}
@@ -77,8 +119,10 @@
       </form>
     {% endif %}
   </div>
+  </div>
 
   {% if is_admin %}
+  <div class="tab-panel" id="panel-users" role="tabpanel" data-panel="users" hidden>
   <div class="settings-card">
     <h3>创建账户</h3>
     <p class="muted">创建一个普通成员账户，自动加入默认站点（只读仪表盘数据）。</p>
@@ -93,13 +137,15 @@
       <button type="submit">创建账户</button>
     </form>
   </div>
+  </div>
 
+  <div class="tab-panel" id="panel-tracking" role="tabpanel" data-panel="tracking" hidden>
   <div class="settings-card">
     <h3>访问过滤（本地/开发环境）</h3>
-    <p class="muted">全局生效，对所有站点有效。开启后，下列类型的访问将不计入统计（采集端静默丢弃，不写入数据库）。</p>
+    <p class="muted">全局生效，对所有站点有效。开启后，下列类型的访问仍会正常记录，但仅在统计与展示报表中被排除（不计入 PV/UV 等指标）。</p>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
       <input type="checkbox" id="ex_enabled" style="width:auto;" {% if excl.enabled %}checked{% endif %}>
-      启用访问过滤（不计入统计）
+      启用访问过滤（统计/展示时排除）
     </label>
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:24px;">
       <input type="checkbox" id="ex_file" style="width:auto;" {% if excl.file %}checked{% endif %}>
@@ -119,6 +165,7 @@
     <p class="msg" id="ex_msg"></p>
     <button type="button" id="ex_save">保存过滤设置</button>
   </div>
+  </div>
   {% endif %}
   </main>
 </div>
@@ -126,6 +173,25 @@
 
 {% block scripts %}
 <script>
+  // 页签切换
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.tab-panel');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const name = tab.dataset.tab;
+      tabs.forEach(t => {
+        const on = t === tab;
+        t.classList.toggle('active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      panels.forEach(p => {
+        const on = p.dataset.panel === name;
+        p.classList.toggle('active', on);
+        p.hidden = !on;
+      });
+    });
+  });
+
   const form = document.getElementById('pw-form');
   const msg = document.getElementById('msg');
   if (form) {
