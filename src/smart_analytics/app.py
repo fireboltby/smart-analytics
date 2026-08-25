@@ -948,3 +948,120 @@ async def create_user(
     finally:
         conn.close()
     return {"ok": True, "msg": f"已创建账户 {email}（普通成员）"}
+
+
+# ---------------------------------------------------------------------------
+# 管理员：用户管理（列表 / 修改信息 / 配置站点权限）
+# ---------------------------------------------------------------------------
+
+@app.get("/api/users")
+async def api_users(user_id: int = Depends(require_user)):
+    """返回所有用户及其站点成员关系；同时返回全部站点供权限配置使用。仅管理员。"""
+    if not user_is_admin(user_id):
+        raise HTTPException(status_code=403, detail="仅管理员可查看用户列表")
+    conn = get_db()
+    try:
+        users = [dict(r) for r in conn.execute(
+            "SELECT id, email, created_at FROM users ORDER BY id").fetchall()]
+        all_sites = [dict(r) for r in conn.execute(
+            "SELECT id, name FROM sites ORDER BY id").fetchall()]
+        mem_rows = conn.execute(
+            "SELECT user_id, site_id, role FROM memberships").fetchall()
+    finally:
+        conn.close()
+    mem_map: dict[int, dict[int, str]] = {}
+    for r in mem_rows:
+        mem_map.setdefault(r["user_id"], {})[r["site_id"]] = r["role"]
+    out = []
+    for u in users:
+        u_sites = []
+        for s in all_sites:
+            if s["id"] in mem_map.get(u["id"], {}):
+                u_sites.append({"id": s["id"], "name": s["name"],
+                                "role": mem_map[u["id"]][s["id"]]})
+        is_admin = any(m == "owner" for m in mem_map.get(u["id"], {}).values())
+        out.append({"id": u["id"], "email": u["email"], "created_at": u["created_at"],
+                    "is_admin": is_admin, "sites": u_sites})
+    return {"users": out, "sites": all_sites}
+
+
+@app.post("/api/update-user")
+async def api_update_user(
+    user_id: Annotated[int, Form()],
+    email: Annotated[str, Form()] = "",
+    new_password: Annotated[str, Form()] = "",
+    actor: int = Depends(require_user),
+):
+    """管理员修改指定用户的邮箱和/或重置密码。至少传入一项。"""
+    if not user_is_admin(actor):
+        raise HTTPException(status_code=403, detail="仅管理员可修改用户")
+    if not email and not new_password:
+        raise HTTPException(status_code=400, detail="邮箱与密码至少提供一项")
+    email = (email or "").strip().lower()
+    conn = get_db()
+    try:
+        row = conn.execute("SELECT id FROM users WHERE id=?", (user_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        if email:
+            if "@" not in email:
+                raise HTTPException(status_code=400, detail="邮箱格式不正确")
+            dup = conn.execute(
+                "SELECT 1 FROM users WHERE email=? AND id!=?", (email, user_id)).fetchone()
+            if dup:
+                raise HTTPException(status_code=409, detail="该邮箱已被其他账户使用")
+        if new_password and len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="密码至少 6 位")
+        if email:
+            conn.execute("UPDATE users SET email=? WHERE id=?", (email, user_id))
+        if new_password:
+            conn.execute("UPDATE users SET password_hash=? WHERE id=?",
+                         (_hash_pw(new_password), user_id))
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "msg": "用户信息已更新"}
+
+
+@app.post("/api/set-user-sites")
+async def api_set_user_sites(
+    user_id: Annotated[int, Form()],
+    sites: Annotated[str, Form()],   # JSON: [{"site_id": int, "role": "owner"|"member"}, ...]
+    actor: int = Depends(require_user),
+):
+    """管理员配置指定用户的站点成员关系（整体替换）。仅管理员。"""
+    if not user_is_admin(actor):
+        raise HTTPException(status_code=403, detail="仅管理员可配置站点权限")
+    try:
+        site_list = json.loads(sites)
+        if not isinstance(site_list, list):
+            raise ValueError()
+    except Exception:
+        raise HTTPException(status_code=400, detail="站点权限格式错误")
+    valid_roles = {"owner", "member"}
+    for s in site_list:
+        if not isinstance(s, dict) or "site_id" not in s or s.get("role") not in valid_roles:
+            raise HTTPException(status_code=400, detail="站点或角色非法")
+    # 自锁防护：不能撤销自己的管理员（owner）权限，否则将无法再管理
+    if user_id == actor:
+        if not any(s.get("role") == "owner" for s in site_list):
+            raise HTTPException(status_code=403, detail="不能撤销自己的管理员（owner）权限")
+    conn = get_db()
+    try:
+        if not conn.execute("SELECT 1 FROM users WHERE id=?", (user_id,)).fetchone():
+            raise HTTPException(status_code=404, detail="用户不存在")
+        existing = {r["id"] for r in conn.execute("SELECT id FROM sites").fetchall()}
+        for s in site_list:
+            if s["site_id"] not in existing:
+                raise HTTPException(status_code=400, detail="站点不存在")
+        # 整体替换该用户的站点成员关系
+        conn.execute("DELETE FROM memberships WHERE user_id=?", (user_id,))
+        for s in site_list:
+            conn.execute(
+                "INSERT OR REPLACE INTO memberships(user_id, site_id, role) VALUES (?, ?, ?)",
+                (user_id, int(s["site_id"]), s["role"]),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    return {"ok": True, "msg": "站点权限已保存"}

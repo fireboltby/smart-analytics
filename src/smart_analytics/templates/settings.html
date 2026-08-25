@@ -80,6 +80,35 @@
   .tab-panel.active { display: block; }
   /* 页签激活时卡片顶部间距收紧 */
   .tab-panel.active > .settings-card { margin-top: 12px; }
+
+  /* ---- 用户管理 ---- */
+  .um-list { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+  .user-row { border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; background: var(--bg); }
+  .user-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .user-email { font-weight: 600; font-size: 15px; word-break: break-all; }
+  .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+  .badge.owner { background: rgba(88, 166, 255, 0.18); color: var(--accent); }
+  .badge.member { background: var(--card); color: var(--muted); border: 1px solid var(--border); }
+  .user-date { margin-left: auto; color: var(--muted); font-size: 12px; }
+  .user-sites { margin-top: 12px; }
+  .user-sites > label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .site-perm-list { display: flex; flex-direction: column; gap: 8px; }
+  .site-perm { display: flex; align-items: center; gap: 10px; }
+  .site-perm input[type=checkbox] { width: auto; flex: 0 0 auto; }
+  .site-perm .sp-name { flex: 1; font-size: 14px; word-break: break-all; }
+  .site-perm select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+  .user-actions { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .um-btn { padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); cursor: pointer; font-size: 13px; transition: filter 0.15s ease; }
+  .um-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .um-btn:hover { filter: brightness(0.96); }
+  .user-edit { margin-top: 12px; border-top: 1px dashed var(--border); padding-top: 12px; }
+  .user-edit summary { cursor: pointer; color: var(--muted); font-size: 13px; user-select: none; }
+  .user-edit .row { margin-top: 8px; }
+  .user-edit label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  .user-edit input { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+  .um-msg { font-size: 13px; min-height: 16px; margin: 8px 0 0; }
+  .um-msg.ok { color: var(--green); }
+  .um-msg.err { color: var(--red); }
 </style>
 {% endblock %}
 
@@ -123,7 +152,7 @@
 
   {% if is_admin %}
   <div class="tab-panel" id="panel-users" role="tabpanel" data-panel="users" hidden>
-  <div class="settings-card">
+  <div class="settings-card" style="max-width:820px;">
     <h3>创建账户</h3>
     <p class="muted">创建一个普通成员账户，自动加入默认站点（只读仪表盘数据）。</p>
     <form id="create-user-form">
@@ -136,6 +165,14 @@
       <p class="msg" id="cu_msg"></p>
       <button type="submit">创建账户</button>
     </form>
+  </div>
+
+  <div class="settings-card" style="max-width:820px;">
+    <h3>用户列表</h3>
+    <p class="muted">可修改邮箱 / 重置密码，并配置每个用户可访问的站点及角色（管理员可管理所有站点，普通成员仅查看数据）。</p>
+    <div id="user-list" class="um-list">
+      <p class="muted">加载中…</p>
+    </div>
   </div>
   </div>
 
@@ -189,8 +226,154 @@
         p.classList.toggle('active', on);
         p.hidden = !on;
       });
+      if (name === 'users') loadUsers();
     });
   });
+
+  // ---- 用户管理：拉取列表 ----
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, c => (
+      {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]
+    ));
+  }
+
+  async function loadUsers() {
+    const box = document.getElementById('user-list');
+    if (!box) return;
+    box.innerHTML = '<p class="muted">加载中…</p>';
+    try {
+      const resp = await fetch('/api/users');
+      const data = await resp.json();
+      if (!resp.ok) {
+        box.innerHTML = '<p class="um-msg err">' + (data.detail || '加载失败') + '</p>';
+        return;
+      }
+      if (!data.users.length) {
+        box.innerHTML = '<p class="muted">暂无其他用户。</p>';
+        return;
+      }
+      box.innerHTML = '';
+      data.users.forEach(u => box.appendChild(renderUserCard(u, data.sites)));
+    } catch (e) {
+      box.innerHTML = '<p class="um-msg err">请求失败，请重试</p>';
+    }
+  }
+
+  function renderUserCard(u, allSites) {
+    const card = document.createElement('div');
+    card.className = 'user-row';
+    const memRole = {};
+    u.sites.forEach(s => { memRole[s.id] = s.role; });
+    const badge = u.is_admin
+      ? '<span class="badge owner">管理员</span>'
+      : '<span class="badge member">普通成员</span>';
+    const permRows = allSites.map(s => {
+      const on = s.id in memRole;
+      const role = on ? memRole[s.id] : 'member';
+      return '<div class="site-perm">'
+        + '<input type="checkbox" data-site="' + s.id + '"' + (on ? ' checked' : '') + '>'
+        + '<span class="sp-name">' + escapeHtml(s.name) + '</span>'
+        + '<select data-site="' + s.id + '">'
+        + '<option value="member"' + (role === 'member' ? ' selected' : '') + '>成员</option>'
+        + '<option value="owner"' + (role === 'owner' ? ' selected' : '') + '>管理员</option>'
+        + '</select></div>';
+    }).join('');
+    const date = u.created_at ? '创建于 ' + escapeHtml(String(u.created_at).slice(0, 10)) : '';
+    card.innerHTML = ''
+      + '<div class="user-head">'
+      +   '<span class="user-email">' + escapeHtml(u.email) + '</span>'
+      +   badge
+      +   '<span class="user-date">' + date + '</span>'
+      + '</div>'
+      + '<div class="user-sites">'
+      +   '<label>站点权限（勾选即授权访问，下拉选择角色）</label>'
+      +   '<div class="site-perm-list">' + permRows + '</div>'
+      +   '<div class="user-actions">'
+      +     '<button type="button" class="um-btn primary" data-save-sites="' + u.id + '">保存站点权限</button>'
+      +   '</div>'
+      +   '<p class="um-msg" data-msg-sites="' + u.id + '"></p>'
+      + '</div>'
+      + '<details class="user-edit">'
+      +   '<summary>修改账户信息（邮箱 / 重置密码）</summary>'
+      +   '<div class="row">'
+      +     '<label>邮箱</label>'
+      +     '<input type="email" data-email="' + u.id + '" value="' + escapeHtml(u.email) + '">'
+      +     '<label>新密码（留空则不修改，至少 6 位）</label>'
+      +     '<input type="text" data-pw="' + u.id + '" placeholder="留空=不修改">'
+      +     '<div class="user-actions">'
+      +       '<button type="button" class="um-btn primary" data-save-info="' + u.id + '">保存信息</button>'
+      +     '</div>'
+      +     '<p class="um-msg" data-msg-info="' + u.id + '"></p>'
+      +   '</div>'
+      + '</details>';
+    return card;
+  }
+
+  const userList = document.getElementById('user-list');
+  if (userList) {
+    userList.addEventListener('click', async (e) => {
+      const t = e.target;
+      // 保存站点权限
+      if (t.dataset.saveSites) {
+        const uid = t.dataset.saveSites;
+        const row = t.closest('.user-row');
+        const sites = [];
+        row.querySelectorAll('.site-perm input[type=checkbox]').forEach(cb => {
+          if (cb.checked) {
+            const sel = row.querySelector('.site-perm select[data-site="' + cb.dataset.site + '"]');
+            sites.push({ site_id: parseInt(cb.dataset.site, 10), role: sel.value });
+          }
+        });
+        const msg = row.querySelector('[data-msg-sites="' + uid + '"]');
+        msg.className = 'um-msg'; msg.textContent = '';
+        try {
+          const resp = await fetch('/api/set-user-sites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ user_id: uid, sites: JSON.stringify(sites) })
+          });
+          const d = await resp.json();
+          if (resp.ok) {
+            msg.className = 'um-msg ok'; msg.textContent = d.msg || '已保存';
+            setTimeout(loadUsers, 600);
+          } else {
+            msg.className = 'um-msg err'; msg.textContent = d.detail || '保存失败';
+          }
+        } catch (err) {
+          msg.className = 'um-msg err'; msg.textContent = '请求失败，请重试';
+        }
+      }
+      // 保存账户信息（邮箱 / 密码）
+      if (t.dataset.saveInfo) {
+        const uid = t.dataset.saveInfo;
+        const row = t.closest('.user-row');
+        const email = row.querySelector('[data-email="' + uid + '"]').value.trim();
+        const pw = row.querySelector('[data-pw="' + uid + '"]').value;
+        const msg = row.querySelector('[data-msg-info="' + uid + '"]');
+        msg.className = 'um-msg'; msg.textContent = '';
+        if (!email && !pw) {
+          msg.className = 'um-msg err'; msg.textContent = '邮箱与密码至少填一项';
+          return;
+        }
+        try {
+          const resp = await fetch('/api/update-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ user_id: uid, email: email, new_password: pw })
+          });
+          const d = await resp.json();
+          if (resp.ok) {
+            msg.className = 'um-msg ok'; msg.textContent = d.msg || '已更新';
+            setTimeout(loadUsers, 600);
+          } else {
+            msg.className = 'um-msg err'; msg.textContent = d.detail || '保存失败';
+          }
+        } catch (err) {
+          msg.className = 'um-msg err'; msg.textContent = '请求失败，请重试';
+        }
+      }
+    });
+  }
 
   const form = document.getElementById('pw-form');
   const msg = document.getElementById('msg');
@@ -241,6 +424,7 @@
         if (resp.ok) {
           cuMsg.className = 'msg ok'; cuMsg.textContent = data.msg || '创建成功';
           cuForm.reset();
+          if (document.getElementById('user-list')) loadUsers();
         } else {
           cuMsg.className = 'msg err'; cuMsg.textContent = data.detail || '创建失败';
         }
